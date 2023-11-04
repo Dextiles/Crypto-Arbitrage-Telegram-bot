@@ -3,6 +3,7 @@ from telebot.types import Message
 from telebot import types
 from loader import bot
 from keyboards.reply import bidaskreplies as stack
+from keyboards.inline import crypto_instruments_key as crypto_key
 from utils.misc.crypto_instruments import arbitrage
 
 
@@ -24,7 +25,8 @@ def get_counts(message: Message):
     for i, (exchange, error) in enumerate(best['exceptions'].items(), start=1):
         string += f'{i}) Из биржи {exchange} не удалось извлечь данные из за ошибки: ({error})\n'
     bot.send_message(message.chat.id, f'Лучшее предложение на бирже {best["offer"]["id"]}\n'
-                                      f'Спред тут составит {round(best["offer"]["spread"], 8)}')
+                                      f'Спред тут составит {round(best["offer"]["spread"], 8)}',
+                     reply_markup=crypto_key.get_extended_markup())
     bot.send_message(message.chat.id, string)
 
 
