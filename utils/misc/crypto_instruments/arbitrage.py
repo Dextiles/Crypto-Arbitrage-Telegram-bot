@@ -1,10 +1,11 @@
 import ccxt
 from loader import bot
 from telebot.types import Message
+from typing import NoReturn
 
 
 class BestOffer:
-    def __init__(self, symbol):
+    def __init__(self, symbol: str) -> NoReturn:
         self._exchanges = ['binance', 'bybit', 'okx', 'kucoin',
                            'kraken', 'bitstamp', 'bitfinex',
                            'upbit', 'gateio', 'gemini',
@@ -36,8 +37,8 @@ class BestOffer:
         return self._exchanges
 
     @exchanges.setter
-    def exchanges(self, *exchanges):
-        for exchange in exchanges:
+    def exchanges(self, *new_exchanges):
+        for exchange in new_exchanges:
             if exchange in ccxt.exchanges:
                 self._exchanges.append(exchange)
             else:

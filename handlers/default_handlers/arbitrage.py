@@ -1,4 +1,3 @@
-import ccxt
 from telebot.types import Message
 from telebot import types
 from loader import bot
