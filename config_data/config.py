@@ -18,5 +18,5 @@ DEFAULT_COMMANDS = (
 )
 DATE_FORMAT = "%d.%m.%Y"
 TIME_FORMAT = "%H:%M:%S"
-DATE_FORMAT_FULL = "%Y.%m.%d (%H:%M:%S)"
+DATE_FORMAT_FULL = "%d.%m.%Y, %H:%M:%S"
 ADDRESS_db = 'database/userdata.sql'
