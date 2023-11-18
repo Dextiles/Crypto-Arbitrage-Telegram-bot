@@ -4,6 +4,7 @@ from loader import bot
 from keyboards.reply import bidaskreplies as stack
 from keyboards.inline import crypto_instruments_key as inline
 from utils.misc.crypto_instruments import arbitrage
+from config_data.config import ROUND_VALUE
 
 
 @bot.message_handler(commands=["arbitrage2"])
@@ -20,6 +21,12 @@ def get_best(message: Message):
         bot.send_message(message.chat.id, f'Обработано {data["total"]} криптопар на биржах:\n'
                                           f'{", ".join(data["excnages"])}\n\n'
                                           f'Выгодная свзка: {data["symbol"]}\n'
-                                          f'Купить: {data["ask"]["id"]}, цена {data["ask"]["value"]} USDT\n'
-                                          f'Продать: {data["bid"]["id"]}, цена {data["bid"]["value"]} USDT\n'
-                                          f'Спред: {data["spread"]} USDT')
+                                          f'Купить: {data["ask"]["id"]}, цена '
+                                          f'{round(data["ask"]["value"], ROUND_VALUE)} USDT\n'
+                                          f'Продать: {data["bid"]["id"]}, цена '
+                                          f'{round(data["bid"]["value"], ROUND_VALUE)} USDT\n'
+                                          f'Спред: {data["spread"]} USDT\n\n'
+                                          f'Валюта доступная для операции: '
+                                          f'{round(data["mount"], ROUND_VALUE)}\n'
+                                          f'Максимальный профит от сделки: '
+                                          f'{round(data["total"], ROUND_VALUE)} USDT')

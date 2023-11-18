@@ -15,7 +15,7 @@ class Exchanges:
         self.__exchanges = ['binance', 'bybit', 'okx', 'kucoin',
                             'kraken', 'bitstamp', 'bitfinex',
                             'upbit', 'gateio', 'gemini',
-                            'coinbase', 'cryptocom']
+                            'coinbase', 'cryptocom', 'bitget', 'mexc']
         self.__errors = dict()
         self.__exchanges_obj = [getattr(ccxt, exchange)() for exchange in self.__exchanges]
         self.__load_markets_all(message)
@@ -115,22 +115,30 @@ class BestOfferFull(Exchanges):
                       'symbol': '',
                       'spread': 0.0,
                       'total': 0,
+                      'mount': 0,
                       'excnages': self._exchanges}
         self._working_directory = dict()
 
     def _counter(self, i_num, sym, exch):
-        best = {sym: {'ask': 0, 'ask_exc': '', 'bid': 0, 'bid_exc': '', 'СПРЕД': 0}}
+        best = {sym: {'ask': 0, 'ask_exc': '',
+                      'bid': 0, 'bid_exc': '',
+                      'ask_lim': 0,
+                      'bid_lim': 0,
+                      'СПРЕД': 0}}
         for exchange in exch:
             try:
                 orderbook = exchange.fetch_order_book(sym)
-                bid = orderbook['bids'][0][0]
-                ask = orderbook['asks'][0][0]
+                bid, bid_mount = orderbook['bids'][0]
+                ask, ask_mount = orderbook['asks'][0]
+                best[sym]['mount'] = min(ask_mount, bid_mount)
                 if best[sym]['ask'] == 0 or best[sym]['ask'] > ask:
                     best[sym]['ask'] = ask
                     best[sym]['ask_exc'] = exchange.id
+                    best[sym]['ask_lim'] = ask_mount
                 if best[sym]['bid'] == 0 or best[sym]['bid'] < bid:
                     best[sym]['bid'] = bid
                     best[sym]['bid_exc'] = exchange.id
+                    best[sym]['bid_lim'] = bid_mount
             except Exception as exception:
                 pass
         spread = round(best[sym]['bid'] - best[sym]['ask'], 5)
@@ -143,11 +151,13 @@ class BestOfferFull(Exchanges):
             self._best['bid']['id'] = best[sym]['bid_exc']
             self._best['bid']['value'] = best[sym]['bid']  #sell
             self._best['spread'] = best[sym]['СПРЕД']
+            self._best['mount'] = min(best[sym]['bid_lim'], best[sym]['ask_lim'])
+            self._best['total'] = self._best['mount'] * self._best['spread']
 
     def get_best_offer(self):
         for exchange in self._exchanges_object:
             try:
-                pairs = list(filter(lambda sym: sym.endswith('/USDT'), exchange.symbols))
+                pairs = list(filter(lambda sym: sym.endswith('/USDT') and not sym == 'TIME/USDT', exchange.symbols))
                 for pair in pairs:
                     if pair not in self._working_directory.keys():
                         self._working_directory[pair] = [exchange]
@@ -164,10 +174,11 @@ class BestOfferFull(Exchanges):
         for i, (symbol, exchanges) in enumerate(self._working_directory.items()):
             Thread(target=self._counter, args=(i, symbol, exchanges)).start()
             if i % 10 == 0:
-                time.sleep(1)
+                time.sleep(0.5)
                 bot.edit_message_text(message_id=start.message_id,
                                       chat_id=self._chat_id,
                                       text=f'Обработано {i} криптопар')
                 self._best['total'] = i
+        time.sleep(3)
         bot.delete_message(message_id=start.message_id, chat_id=self._chat_id)
         return self._best
