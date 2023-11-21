@@ -157,7 +157,7 @@ class BestOfferFull(Exchanges):
     def get_best_offer(self):
         for exchange in self._exchanges_object:
             try:
-                pairs = list(filter(lambda sym: sym.endswith('/USDT') and not sym == 'TIME/USDT', exchange.symbols))
+                pairs = list(filter(lambda sym: sym.endswith('/USDT'), exchange.symbols))
                 for pair in pairs:
                     if pair not in self._working_directory.keys():
                         self._working_directory[pair] = [exchange]
