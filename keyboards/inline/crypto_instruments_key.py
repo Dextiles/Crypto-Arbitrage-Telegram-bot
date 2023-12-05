@@ -1,18 +1,9 @@
 from telebot import types
+import ccxt
 
 
-def get_extended_markup():
+def get_exchanges_links(bid_id, bid_link, ask_id, ask_link):
     markup = types.InlineKeyboardMarkup()
-    markup.add(types.InlineKeyboardButton('Показать полные сведения', callback_data='show_all'))
-    return markup
-
-
-def get_exchanges_links(bid: dict, ask: dict):
-    markup = types.InlineKeyboardMarkup()
-    bid_exc_id = str(bid["id"])
-    bid_exc_url = str(bid['link'])
-    ask_exc_id = str(ask['id'])
-    ask_exc_url = str(ask['link'])
-    markup.row(types.InlineKeyboardButton(text=bid_exc_id, callback_data='linker'),
-               types.InlineKeyboardButton(text=ask_exc_id, callback_data='linker'))
+    markup.add(types.InlineKeyboardButton(text=f'Купить на {bid_id}', url=bid_link))
+    markup.add(types.InlineKeyboardButton(text=f'Продать на {ask_id}', url=ask_link))
     return markup
