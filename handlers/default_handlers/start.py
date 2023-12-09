@@ -1,7 +1,7 @@
 from telebot.types import Message
 from loader import bot
 from peewee import *
-from database.Users import User
+from database.userdata import Users
 from telebot import types
 
 
@@ -17,7 +17,7 @@ def bot_start(message: Message):
                    '4. Просмотр OHLCV в виде графика тиков\n'
                    '5. Просмотр информации о конкретной криптовалюте')
     try:
-        User.create(
+        Users.create(
             user_id=message.from_user.id,
             username=message.from_user.username,
             first_name=message.from_user.first_name,

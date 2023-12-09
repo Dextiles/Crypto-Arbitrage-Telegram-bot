@@ -18,7 +18,7 @@ def start_arbitrage(message: Message):
 
 
 def get_best(message: Message):
-    if message.text == 'Начать' or message.text == 'Еще раз':
+    if message.text == 'Начать':
         data = arbitrage.BestOfferFull(message).get_best_offer()
         bot.send_message(message.chat.id, f'Запрос актуален на '
                                           f'{datetime.strftime(datetime.now(), DATE_FORMAT_FULL)}\n\n'
@@ -36,3 +36,6 @@ def get_best(message: Message):
                                           f'{round(data["mount"], ROUND_VALUE)}\n'
                                           f'Полный профит с {round(data["ask"]["value"] * data["mount"], 5)} USDT:\n'
                                           f'=> {round(data["mount"] * data["spread"], ROUND_VALUE)} USDT <=\n')
+    elif message.text == 'Выход':
+        bot.send_message(message.chat.id, f'Спасибо за использование сервиса!',
+                         reply_markup=types.ReplyKeyboardRemove())

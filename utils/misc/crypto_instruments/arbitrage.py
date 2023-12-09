@@ -8,15 +8,15 @@ from datetime import datetime
 from config_data.config import DATE_FORMAT_FULL
 from telebot import types as btn
 from threading import Thread
+from database.userdata import Users
+import json
 
 
 class Exchanges:
     def __init__(self, message: Message):
-        self.__exchanges = ['binance', 'bybit', 'okx', 'kucoin',
-                            'kraken', 'bitstamp', 'bitfinex',
-                            'upbit', 'gateio', 'gemini',
-                            'coinbase', 'cryptocom', 'bitget', 'mexc', 'zonda', 'tokocrypto', 'probit', 'yobit']
-        self.__balance = 1000
+        self.__current_user = Users.get_or_none(Users.user_id == message.from_user.id)
+        self.__exchanges = json.loads(self.__current_user.work_exchanges)
+        self.__min_profit = self.__current_user.default_profit
         self.__errors = dict()
         self.__exchanges_obj = [getattr(ccxt, exchange)() for exchange in self.__exchanges]
         self.__load_markets_all(message)
@@ -58,8 +58,8 @@ class Exchanges:
             self.__errors['fee'] = ex
 
     @property
-    def balance(self):
-        return self.__balance
+    def min_profit(self):
+        return self.__min_profit
 
     @property
     def errors(self) -> dict[str, str]:
@@ -190,7 +190,7 @@ class BestOfferFull(Exchanges):
                 and spread > 0.001\
                 and ask_with_fee['fee'] > 0.0\
                 and bid_with_fee['fee'] > 0.0\
-                and spread * min_v > 10:
+                and spread * min_v > super().min_profit:
             self._best['symbol'] = sym
             self._best['ask']['id'] = str(best[sym]['ask_exc'])
             self._best['ask']['fee'] = ask_with_fee['cost']
