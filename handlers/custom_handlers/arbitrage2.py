@@ -1,5 +1,5 @@
-from telebot.types import Message
-from telebot import types
+from telebot.types import Message # noqa
+from telebot import types # noqa
 from loader import bot
 from keyboards.reply import bidaskreplies as stack
 from keyboards.inline import crypto_instruments_key as inline
@@ -22,8 +22,8 @@ def get_best(message: Message):
         data = arbitrage.BestOfferFull(message).get_best_offer()
         bot.send_message(message.chat.id, f'Запрос актуален на '
                                           f'{datetime.strftime(datetime.now(), DATE_FORMAT_FULL)}\n\n'
-                                          f'Обработано {data["total"]} криптопар на биржах:\n'
-                                          f'{", ".join(data["excnages"])}\n\n'
+                                          f'Обработано {data["total"]} криптопар на избранных биржах\n'
+                                          f'(/info - просмотр ваших настроек)\n\n'
                                           f'Выгодная свзка: {data["symbol"]}\n'
                                           f'Купить: {data["ask"]["id"]}, цена '
                                           f'{round(data["ask"]["value"], ROUND_VALUE)} USDT\n'

@@ -1,4 +1,4 @@
-from telebot import types
+from telebot import types # noqa
 
 
 def about_me():

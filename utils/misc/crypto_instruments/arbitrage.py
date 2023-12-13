@@ -1,19 +1,18 @@
 import time
-
 import ccxt
 from loader import bot
-from telebot.types import Message, ReplyKeyboardRemove
+from telebot.types import Message, ReplyKeyboardRemove # noqa
 from typing import NoReturn
 from datetime import datetime
 from config_data.config import DATE_FORMAT_FULL
-from telebot import types as btn
+from telebot import types as btn # noqa
 from threading import Thread
 from database.userdata import Users
 import json
 
 
 class Exchanges:
-    def __init__(self, message: Message):
+    def __init__(self, message: Message) -> NoReturn:
         self.__current_user = Users.get_or_none(Users.user_id == message.from_user.id)
         self.__exchanges = json.loads(self.__current_user.work_exchanges)
         self.__min_profit = self.__current_user.default_profit
@@ -21,7 +20,7 @@ class Exchanges:
         self.__exchanges_obj = [getattr(ccxt, exchange)() for exchange in self.__exchanges]
         self.__load_markets_all(message)
 
-    def __load_markets_all(self, message):
+    def __load_markets_all(self, message) -> NoReturn:
         invoke = bot.send_message(message.chat.id, f'Во время загрузки ничего не нажимайте.. ',
                                   reply_markup=ReplyKeyboardRemove())
         msg = bot.send_message(message.chat.id, 'Ждите, загружаем биржи..')
@@ -58,7 +57,7 @@ class Exchanges:
             self.__errors['fee'] = ex
 
     @property
-    def min_profit(self):
+    def min_profit(self) -> int:
         return self.__min_profit
 
     @property
@@ -70,7 +69,7 @@ class Exchanges:
         return self.__exchanges_obj
 
     @property
-    def exchanges(self):
+    def exchanges(self) -> list:
         return self.__exchanges
 
     @exchanges.setter
@@ -169,7 +168,7 @@ class BestOfferFull(Exchanges):
                     best[sym]['bid_exc'] = exchange
                     best[sym]['bid_lim'] = bid_mount
                     best[sym]['bid_link'] = exchange.links['www']
-            except Exception as exception:
+            except Exception as exception: # noqa
                 pass
 
         min_v = min(best[sym]['bid_lim'], best[sym]['ask_lim'])
@@ -184,12 +183,12 @@ class BestOfferFull(Exchanges):
         spread = round(bid_with_fee['fee_cost'] - ask_with_fee['fee_cost'], 5)
         best[sym]['СПРЕД'] = spread
 
-        if spread > 0 and spread > self._best['spread'] and min_v > 0.0001 \
-                and best[sym]['ask'] > 0.0001 \
-                and best[sym]['bid'] > 0.0001\
-                and spread > 0.001\
-                and ask_with_fee['fee'] > 0.0\
-                and bid_with_fee['fee'] > 0.0\
+        if spread > 0 and spread > self._best['spread'] and min_v > 0.1 \
+                and best[sym]['ask'] > 0.01 \
+                and best[sym]['bid'] > 0.01 \
+                and spread > 0.1 \
+                and ask_with_fee['fee'] > 0.0 \
+                and bid_with_fee['fee'] > 0.0 \
                 and spread * min_v > super().min_profit:
             self._best['symbol'] = sym
             self._best['ask']['id'] = str(best[sym]['ask_exc'])
@@ -212,7 +211,7 @@ class BestOfferFull(Exchanges):
                         self._working_directory[pair] = [exchange]
                     else:
                         self._working_directory[pair].append(exchange)
-            except Exception as ex:
+            except Exception as ex: # noqa
                 pass
 
         for key, value in list(self._working_directory.items()):

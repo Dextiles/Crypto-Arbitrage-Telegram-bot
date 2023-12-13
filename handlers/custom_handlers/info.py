@@ -14,9 +14,10 @@ def bot_info(message: Message):
     else:
         bad_list_exchanges = (f'Криптовалюты в черном списке:\n'
                               f'{", ".join(json.loads(current_user.bad_list_currency))}')
-
+    exchanges = json.loads(current_user.work_exchanges)
     bot.send_message(message.chat.id, f'{current_user.username}, дата регистрации в проекте: '
                                       f'{datetime.strftime(current_user.reg_date, DATE_FORMAT_FULL)}\n\n'
                                       f'Ваши рабочие криптобиржы: \n'
-                                      f'{", ".join(json.loads(current_user.work_exchanges))}\n\n'
+                                      f'{", ".join(exchanges)}\n(используется {len(exchanges)} криптобирж,'
+                                      f' чтобы удалить или добавить биржу используйте /config)\n\n'
                                       f'{bad_list_exchanges}')
