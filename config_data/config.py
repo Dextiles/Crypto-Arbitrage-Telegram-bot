@@ -21,4 +21,5 @@ DATE_FORMAT = "%d.%m.%Y"
 TIME_FORMAT = "%H:%M:%S"
 DATE_FORMAT_FULL = "%d.%m.%Y, %H:%M:%S"
 ADDRESS_db = 'database/userdata.sql'
+STATES_db = 'database/userstates.vdb'
 ROUND_VALUE = 5

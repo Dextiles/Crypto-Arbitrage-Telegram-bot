@@ -1,5 +1,5 @@
-from telebot.types import Message # noqa
-from telebot import types # noqa
+from telebot.types import Message  # noqa
+from telebot import types  # noqa
 from loader import bot
 from keyboards.reply import bidaskreplies as stack
 from keyboards.inline import crypto_instruments_key as inline
@@ -7,6 +7,8 @@ from utils.misc.crypto_instruments import arbitrage
 from config_data.config import ROUND_VALUE
 from datetime import datetime
 from config_data.config import DATE_FORMAT_FULL
+from database import userstates_worker
+from states.userstates.arbitrage_states import CryptoArbitrageFull
 
 
 @bot.message_handler(commands=["arbitrage2"])
@@ -14,9 +16,10 @@ def start_arbitrage(message: Message):
     bot.send_message(message.chat.id, f'Добро пожаловать в раздел полного арбитража, '
                                       f'мы полностью проанализируем ваши биржи и найдем лучшие связки и предложения',
                      reply_markup=stack.start_reply())
-    bot.register_next_step_handler(message, get_best)
+    userstates_worker.set_state(message.chat.id, CryptoArbitrageFull.START_ARBITRAGE.value)
 
 
+@bot.message_handler(func=lambda message: userstates_worker.get_current_state(message.chat.id) == CryptoArbitrageFull.START_ARBITRAGE.value)
 def get_best(message: Message):
     if message.text == 'Начать':
         data = arbitrage.BestOfferFull(message).get_best_offer()
@@ -39,3 +42,5 @@ def get_best(message: Message):
     elif message.text == 'Выход':
         bot.send_message(message.chat.id, f'Спасибо за использование сервиса!',
                          reply_markup=types.ReplyKeyboardRemove())
+        return
+    return
