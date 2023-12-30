@@ -19,7 +19,4 @@ def set_state(user_id, value):
         except Exception as ex:
             with open('database/error.log', 'a') as log_file:
                 log_file.write(str(ex))
-            with open(config.STATES_db, 'w'):
-                pass
-            set_state(user_id, value)
-            return True
+            return False

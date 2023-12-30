@@ -1,8 +1,8 @@
-from telebot.types import Message
+from telebot.types import Message # noqa
 from loader import bot
 from peewee import *
 from database.userdata import Users
-from telebot import types
+from telebot import types # noqa
 
 
 @bot.message_handler(commands=["start"])
