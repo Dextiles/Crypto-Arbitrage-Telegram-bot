@@ -1,10 +1,14 @@
 from enum import Enum
 
 
-class CryptoArbitrage(Enum):
+class DefaultStart(Enum):
     INVOKE = "0"
+
+
+class CryptoArbitrage(Enum):
+    GET_ORDER = "1"
+    GET_COUNTS = "2"
 
 
 class CryptoArbitrageFull(Enum):
-    INVOKE = "0"
     START_ARBITRAGE = "1"

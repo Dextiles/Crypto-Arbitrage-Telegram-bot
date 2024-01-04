@@ -106,7 +106,7 @@ class BestOffer(Exchanges):
                 self._best_ask['url'] = link
 
     def get_best_offer(self, message: Message) -> dict:
-        bot.send_message(message.chat.id, 'Ждите...', reply_markup=btn.ReplyKeyboardRemove())
+        wait_mess = bot.send_message(message.chat.id, 'Ждите...', reply_markup=btn.ReplyKeyboardRemove())
         for i, exchange in enumerate(self._exchanges_object, start=1):
             try:
                 if exchange.has['fetchOrderBook'] and self._symbol in exchange.symbols:
@@ -122,6 +122,7 @@ class BestOffer(Exchanges):
         volume = min(self._best_bid["mount"], self._best_ask['mount'])
         spread = self._best_bid['value'] - self._best_ask['value']
         profit = volume * spread
+        bot.delete_message(message_id=wait_mess.message_id, chat_id=message.chat.id)
         return {'best_bid': self._best_bid,
                 'best_ask': self._best_ask,
                 'spread': spread,

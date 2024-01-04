@@ -8,7 +8,7 @@ def get_current_state(user_id):
         try:
             return db[user_id].decode()
         except KeyError:
-            return arbitrage_states.CryptoArbitrageFull.INVOKE.value
+            return arbitrage_states.DefaultStart.INVOKE.value
 
 
 def set_state(user_id, value):
