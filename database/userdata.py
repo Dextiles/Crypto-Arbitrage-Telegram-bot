@@ -4,9 +4,6 @@ from datetime import datetime
 import json
 
 
-
-
-
 db = SqliteDatabase(ADDRESS_db)
 
 
@@ -20,11 +17,9 @@ class Users(Model):
     default_profit = IntegerField(default=5)
     work_exchanges = CharField(default=json.dumps([
     "binance", "bybit", "okx", "kucoin",
-    "kraken", "bitstamp", "bitfinex",
+    "kraken",
     "upbit", "gateio", "gemini",
-    "coinbase", "cryptocom", "bitget", "mexc", "zonda",
-    "tokocrypto", "probit", "yobit"
-  ]), null=False)
+    "coinbase", "cryptocom"]), null=False)
 
     class Meta:
         database = db
