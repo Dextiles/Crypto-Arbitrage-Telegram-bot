@@ -2,38 +2,69 @@ from telebot.types import Message # noqa
 from telebot import types # noqa
 from loader import bot
 from keyboards.reply import bidaskreplies as stack
-from keyboards.inline import crypto_instruments_key as inline
 from utils.misc.crypto_instruments import arbitrage
 from config_data.config import ROUND_VALUE
-from states.userstates.arbitrage_states import CryptoArbitrage as Crpt
-from database import userstates_worker
+import states.userstates.arbitrage_states as Arbitrage
+from database import user_controller as userstates_worker
 
 
 @bot.message_handler(commands=["arbitrage"])
 def start_arbitrage(message: Message):
+    """
+    Handles the "arbitrage" command from the bot. This function sends a welcome message to the user and provides
+    information about the cryptocurrency arbitrage tool. It compares currency exchange rates on selected
+    crypto exchanges and returns the best offers for buying and selling.
+
+    Parameters:
+    - message(Message): A Message object representing the incoming message from the user.
+
+    Returns:
+    None
+    """
     bot.send_message(message.chat.id, f'Добро пожаловать в раздел арбитража криптовалют. '
                                       f'Данный инструмент сравнивает курсы по выбранным валютным связкам на ваших '
                                       f'криптобиржах и возвращает выгодные предложения по покупке и продаже',
                      reply_markup=stack.start_reply())
-    userstates_worker.set_state(message.chat.id, Crpt.GET_ORDER.value)
+    userstates_worker.set_state(message.chat.id, Arbitrage.CryptoArbitrage.GET_ORDER.value)
     return
 
 
-@bot.message_handler(func=lambda message: userstates_worker.get_current_state(message.chat.id) == Crpt.GET_ORDER.value)
+@bot.message_handler(func=lambda message: userstates_worker.get_current_state(message.chat.id) == Arbitrage.CryptoArbitrage.GET_ORDER.value)
 def order_book(message: Message):
+    """
+    Handles messages when the user's current state is GET_ORDER in the Arbitrage.CryptoArbitrage state machine.
+
+    Parameters:
+        message (Message): The message object containing information about the user's input.
+
+    Returns:
+        None
+
+    Raises:
+        None
+    """
     if message.text == 'Начать' or message.text == 'Еще раз':
         bot.send_message(message.chat.id, 'Выберете валютную связку', reply_markup=stack.symbol_vars())
-        userstates_worker.set_state(message.chat.id, Crpt.GET_COUNTS.value)
+        userstates_worker.set_state(message.chat.id, Arbitrage.CryptoArbitrage.GET_COUNTS.value)
     elif message.text == 'Выход':
         return
 
 
-@bot.message_handler(func=lambda message: userstates_worker.get_current_state(message.chat.id) == Crpt.GET_COUNTS.value)
+@bot.message_handler(func=lambda message: userstates_worker.get_current_state(message.chat.id) == Arbitrage.CryptoArbitrage.GET_COUNTS.value)
 def get_counts(message: Message):
+    """
+    Handler function for getting the counts in the CryptoArbitrage state.
+
+    Args:
+        message (Message): The message object received from the user.
+
+    Returns:
+        None
+    """
     if message.text == 'Ввести свой вариант':
         order_book(message, False)
     elif message.text == 'Назад':
-        userstates_worker.set_state(message.chat.id, Crpt.GET_COUNTS.value)
+        userstates_worker.set_state(message.chat.id, Arbitrage.CryptoArbitrage.GET_COUNTS.value)
         return
     elif not message.text.startswith('/'):
         symbol = message.text.lstrip()
@@ -62,3 +93,4 @@ def get_counts(message: Message):
                                           f'Максимальный выигрыш от сделки: {round(best["profit"], ROUND_VALUE)} USDT'
                                           f'\n\n{errors_text}',
                          parse_mode='html', reply_markup=types.ReplyKeyboardRemove())
+        userstates_worker.set_state(message.chat.id, Arbitrage.DefaultStart.INVOKE.value)

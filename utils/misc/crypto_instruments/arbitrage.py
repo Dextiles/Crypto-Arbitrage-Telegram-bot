@@ -13,6 +13,15 @@ import json
 
 class Exchanges:
     def __init__(self, message: Message) -> NoReturn:
+        """
+        Initializes the class instance with the given message.
+
+        Parameters:
+            message (Message): The message object containing the user information.
+
+        Returns:
+            NoReturn: This function does not return anything.
+        """
         self.__current_user = Users.get_or_none(Users.user_id == message.from_user.id)
         self.__exchanges = json.loads(self.__current_user.work_exchanges)
         self.__min_profit = self.__current_user.default_profit
@@ -21,6 +30,15 @@ class Exchanges:
         self.__load_markets_all(message)
 
     def __load_markets_all(self, message) -> NoReturn:
+        """
+        Load all markets for each exchange.
+
+        Args:
+            message (Message): The message object containing the user information.
+
+        Returns:
+            NoReturn: This function does not return anything.
+        """
         invoke = bot.send_message(message.chat.id, f'Во время загрузки ничего не нажимайте.. ',
                                   reply_markup=ReplyKeyboardRemove())
         msg = bot.send_message(message.chat.id, 'Ждите, загружаем биржи..')
@@ -39,6 +57,22 @@ class Exchanges:
 
     def universe_fee_calculation(self, exchange, symbol: str, option: str, price: float) \
             -> dict[str, float]:
+        """
+        Calculates the fee for a given symbol and price using the specified exchange.
+
+        Args:
+            exchange (Exchange): The exchange object used to calculate the fee.
+            symbol (str): The symbol for which the fee is being calculated.
+            option (str): The option type, either 'buy' or 'sell'.
+            price (float): The price at which the fee is being calculated.
+
+        Returns:
+            dict[str, float]: A dictionary containing the cost, fee, and fee cost.
+
+        Raises:
+            ValueError: If the option is neither 'buy' nor 'sell' and the symbol is not in the exchange's symbols.
+
+        """
         try:
             if option not in ('byu', 'sell') and symbol not in exchange.symbols:
                 raise ValueError
@@ -78,11 +112,22 @@ class Exchanges:
             if exchange in ccxt.exchanges:
                 self.__exchanges.append(exchange)
             else:
-                exit(f'С биржей {exchange} мы работать не умеем или ее не существует')
+                pass
 
 
 class BestOffer(Exchanges):
+
     def __init__(self, symbol: str, message: Message) -> NoReturn:
+        """
+        Initializes an instance of the class with the given symbol and message.
+
+        Parameters:
+            symbol (str): The symbol to be initialized.
+            message (Message): The message to be initialized.
+
+        Returns:
+            NoReturn: This function does not return any value.
+        """
         super().__init__(message)
         self._exchanges = super().exchanges
         self._symbol = symbol
@@ -91,7 +136,20 @@ class BestOffer(Exchanges):
         self._best_ask = {'id': '', 'value': 0.0, 'mount': 0.0, 'link': ''}
         self._bad_symbols = dict()
 
-    def _calc_best(self, key: str, value: float, mount: float, exchange_id: str, link: str) -> None:
+    def _calc_best(self, key: str, value: float, mount: float, exchange_id: str, link: str) -> NoReturn:
+        """
+        Calculate and update the best bid and best ask values based on the given key, value, mount, exchange_id, and link.
+
+        Parameters:
+            key (str): The key indicating whether the value is for bids or asks.
+            value (float): The value to be compared with the current best bid or best ask value.
+            mount (float): The mount associated with the value.
+            exchange_id (str): The ID of the exchange associated with the value.
+            link (str): The URL associated with the value.
+
+        Returns:
+            None
+        """
         if key == 'bids':
             if self._best_bid['value'] == 0 or value > self._best_bid['value']:
                 self._best_bid['value'] = value
@@ -106,6 +164,16 @@ class BestOffer(Exchanges):
                 self._best_ask['url'] = link
 
     def get_best_offer(self, message: Message) -> dict:
+        """
+        Retrieves the best offer for a given message.
+
+        Args:
+            message (Message): The message object.
+
+        Returns:
+            dict: A dictionary containing the best bid, best ask, spread, errors,
+                  time, volume, and profit.
+        """
         wait_mess = bot.send_message(message.chat.id, 'Ждите...', reply_markup=btn.ReplyKeyboardRemove())
         for i, exchange in enumerate(self._exchanges_object, start=1):
             try:
@@ -134,6 +202,15 @@ class BestOffer(Exchanges):
 
 class BestOfferFull(Exchanges):
     def __init__(self, message: Message):
+        """
+        Initializes the class instance with the given message.
+
+        Args:
+            message (Message): The message object containing information about the chat.
+
+        Returns:
+            None
+        """
         self._chat_id = message.chat.id
         super().__init__(message)
         self._exchanges = super().exchanges
@@ -147,7 +224,20 @@ class BestOfferFull(Exchanges):
                       'total': 0}
         self._working_directory = dict()
 
-    def _counter(self, sym, exch):
+    def _counter(self, sym, exch) -> NoReturn:
+        """
+        This function is a private method that calculates the best bid and ask prices for a given symbol and exchange.
+
+        Parameters:
+            sym (str): The symbol to calculate the best prices for.
+            exch (list): A list of exchanges to fetch the order book from.
+
+        Returns:
+            None
+
+        Raises:
+            None
+        """
         best = {sym: {'ask': 0, 'ask_exc': exch[0],
                       'bid': 0, 'bid_exc': exch[0],
                       'ask_lim': 0.0, 'ask_link': '',
@@ -204,6 +294,12 @@ class BestOfferFull(Exchanges):
             self._best['mount'] = min_v
 
     def get_best_offer(self):
+        """
+        Retrieves the best offer from a list of exchanges.
+
+        Returns:
+            dict: A dictionary representing the best offer.
+        """
         for exchange in self._exchanges_object:
             try:
                 pairs = list(filter(lambda sym: sym.endswith('/USDT'), exchange.symbols))

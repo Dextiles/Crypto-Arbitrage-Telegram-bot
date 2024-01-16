@@ -1,5 +1,4 @@
 from telebot import types
-import ccxt
 
 
 def get_exchanges_links(bid_id, bid_link, ask_id, ask_link):

@@ -26,7 +26,3 @@ class Users(Model):
 
 
 Users.create_table()
-
-
-
-
