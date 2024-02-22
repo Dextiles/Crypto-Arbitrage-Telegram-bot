@@ -3,7 +3,6 @@ from config_data.config import ADDRESS_db
 from datetime import datetime
 import json
 
-
 db = SqliteDatabase(ADDRESS_db)
 
 
@@ -20,6 +19,7 @@ class Users(Model):
     "kraken",
     "upbit", "gateio", "gemini",
     "coinbase", "cryptocom"]), null=False)
+    user_state = IntegerField(default=0)
 
     class Meta:
         database = db

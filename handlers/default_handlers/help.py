@@ -1,4 +1,4 @@
-from telebot.types import Message
+from telebot.types import Message # noqa
 
 from config_data.config import DEFAULT_COMMANDS
 from loader import bot

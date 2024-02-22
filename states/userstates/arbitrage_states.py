@@ -1,14 +1,7 @@
-from enum import Enum
+from telebot.handler_backends import StatesGroup, State
 
 
-class DefaultStart(Enum):
-    INVOKE = "0"
-
-
-class CryptoArbitrage(Enum):
-    GET_ORDER = "1"
-    GET_COUNTS = "2"
-
-
-class CryptoArbitrageFull(Enum):
-    START_ARBITRAGE = "1"
+class Base_Arbitrage(StatesGroup):
+    Start = State()
+    Choose_pair = State()
+    Get_result = State()

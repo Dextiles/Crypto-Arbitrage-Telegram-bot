@@ -7,6 +7,12 @@ from telebot import types # noqa
 
 @bot.message_handler(commands=["start"])
 def bot_start(message: Message):
+    """
+    Handles the start command for the bot. Creates a new user, or sends a welcome
+    back message if the user already exists.
+    Parameters:
+    - message: Message - the message object triggering the command
+    """
     invoke_text = 'Это сервис по арбитражу криптовалют!'
     try:
         Users.create(
@@ -22,3 +28,5 @@ def bot_start(message: Message):
         bot.send_message(message.chat.id, f'Рад вас снова видеть, {message.from_user.full_name}\n'
                                           f'{invoke_text}!',
                          reply_markup=types.ReplyKeyboardRemove())
+    finally:
+        pass
