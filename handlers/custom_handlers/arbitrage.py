@@ -28,11 +28,12 @@ def start_arbitrage(message: Message):
 
 
 @bot.callback_query_handler(func=lambda call: True, state=Base_Arbitrage.Start)  # пытаемся его отловить
-def order_book(message: Message):
+def order_book(data):
     """
     Handles messages when the user's current state is GET_ORDER in the Arbitrage.CryptoArbitrage state machine.
 
     Parameters:
+        data:
         message (Message): The message object containing information about the user's input.
 
     Returns:
@@ -41,21 +42,24 @@ def order_book(message: Message):
     Raises:
         None
     """
+    message = data.message
     if message.text == 'Начать' or message.text == 'Еще раз':
         bot.send_message(message.chat.id, 'Выберете валютную связку', reply_markup=stack.symbol_vars())
     bot.set_state(message.from_user.id, Base_Arbitrage.Choose_pair, message.chat.id)
 
 
 @bot.callback_query_handler(func=lambda call: True, state=Base_Arbitrage.Choose_pair)
-def get_counts(message: Message):
+def get_counts(data):
     """
     A callback query handler that processes the message and performs various actions based on the message text.
     Args:
+        data:
         message: The message object containing information about the user's input.
 
     Returns: None
 
     """
+    message = data.message
     if message.text == 'Ввести свой вариант':
         order_book(message, False)
     elif message.text == 'Назад':
