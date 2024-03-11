@@ -24,10 +24,10 @@ def start_arbitrage(message: Message):
                                       f'Данный инструмент сравнивает курсы по выбранным валютным связкам на ваших '
                                       f'криптобиржах и возвращает выгодные предложения по покупке и продаже',
                      reply_markup=stack.start_reply())
-    bot.set_state(message.from_user.id, Base_Arbitrage.Start, message.chat.id)
+    bot.set_state(message.from_user.id, Base_Arbitrage.Start, message.chat.id)  # переходим к состоянию
 
 
-@bot.message_handler(state=Base_Arbitrage.Start)
+@bot.callback_query_handler(func=lambda call: True, state=Base_Arbitrage.Start)  # пытаемся его отловить
 def order_book(message: Message):
     """
     Handles messages when the user's current state is GET_ORDER in the Arbitrage.CryptoArbitrage state machine.
@@ -46,16 +46,15 @@ def order_book(message: Message):
     bot.set_state(message.from_user.id, Base_Arbitrage.Choose_pair, message.chat.id)
 
 
-@bot.message_handler(state=Base_Arbitrage.Get_result)
+@bot.callback_query_handler(func=lambda call: True, state=Base_Arbitrage.Choose_pair)
 def get_counts(message: Message):
     """
-    Handler function for getting the counts in the CryptoArbitrage state.
-
+    A callback query handler that processes the message and performs various actions based on the message text.
     Args:
-        message (Message): The message object received from the user.
+        message: The message object containing information about the user's input.
 
-    Returns:
-        None
+    Returns: None
+
     """
     if message.text == 'Ввести свой вариант':
         order_book(message, False)
