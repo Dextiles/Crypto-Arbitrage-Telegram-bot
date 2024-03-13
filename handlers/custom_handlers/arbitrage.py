@@ -1,94 +1,75 @@
 from telebot.types import Message  # noqa
 from telebot import types  # noqa
 from loader import bot
-from keyboards.reply import bidaskreplies as stack
+from keyboards.reply import arbitrage_replies as stack
+from keyboards.inline import crypto_instruments_key as inline  # noqa
 from utils.misc.crypto_instruments import arbitrage
 from config_data.config import ROUND_VALUE
-from states.userstates.arbitrage_states import Base_Arbitrage
+from datetime import datetime
+from config_data.config import DATE_FORMAT_FULL
+import states.userstates.arbitrage_states as Arbitrage  # noqa
+from states.userstates import arbitrage_states as states
 
 
 @bot.message_handler(commands=["arbitrage"])
 def start_arbitrage(message: Message):
     """
-    Handles the "arbitrage" command from the bot. This function sends a welcome message to the user and provides
-    information about the cryptocurrency arbitrage tool. It compares currency exchange rates on selected
-    crypto exchanges and returns the best offers for buying and selling.
+    A function to handle the 'arbitrage' command message.
+    Takes a Message object as a parameter.
+    Sends a welcome message about cryptocurrency arbitrage to the chat and
+    sets the user's state to the start of the arbitrage process.
+    """
+    bot.send_message(message.chat.id, f'\U0001F310 Добро пожаловать в арбитраж криптовалют!\n'
+                                      f'мы полностью проанализируем ваши биржи и найдем лучшие связки и предложения',
+                     reply_markup=stack.create_start_reply())
+    bot.set_state(message.from_user.id, states.Arbitrage.Start, message.chat.id)
 
-    Parameters:
-    - message(Message): A Message object representing the incoming message from the user.
+
+@bot.message_handler(func=lambda message: message.text == 'Начать \U00002705', state=states.Arbitrage.Start)
+def get_best(message: Message):
+    """
+    Message handler for starting the process. Retrieves and sends the best offer for arbitrage trading,
+    including various details such as datetime, total number of crypto pairs on selected exchanges, best symbol,
+    buy and sell details, net spread, available currency for operation, and total profit.
+    Removes the reply keyboard and deletes the state after execution.
+    """
+    arbitrage_data = arbitrage.BestOffer(message).get_best_offer()
+    bot.send_message(message.chat.id,
+                     f'Запрос актуален на \U0001F554 '
+                     f'{datetime.strftime(datetime.now(), DATE_FORMAT_FULL)}\n\n'
+                     f'\U0001F4CC Обработано {arbitrage_data["total"]} криптопар на избранных биржах '
+                     f'(/info - просмотр ваших настроек)\n\n'
+                     f'\U00002757 Выгодная связка: {arbitrage_data["symbol"]} \U00002757\n'
+                     f'\U00002795 Купить: {arbitrage_data["ask"]["id"]}, цена '
+                     f'{round(arbitrage_data["ask"]["value"], ROUND_VALUE)} USDT\n'
+                     f'(Комиссия в {round(arbitrage_data["ask"]["fee"], ROUND_VALUE)})\n'
+                     f'\U00002796 Продать: {arbitrage_data["bid"]["id"]}, цена '
+                     f'{round(arbitrage_data["bid"]["value"], ROUND_VALUE)} USDT\n'
+                     f'(Комиссия в {round(arbitrage_data["bid"]["fee"], ROUND_VALUE)})\n\n'
+                     f'Чистый спред:\n\U0001F4B2 {arbitrage_data["spread"]} USDT\n\n'
+                     f'Валюта доступная для операции: '
+                     f'{round(arbitrage_data["mount"], ROUND_VALUE)}\n'
+                     f'Полный профит с {round(arbitrage_data["ask"]["value"] * arbitrage_data["mount"], 5)} '
+                     f'USDT:\n'
+                     f'\U0001F4B5 {round(arbitrage_data["mount"] * arbitrage_data["spread"], ROUND_VALUE)} USDT ',
+                     reply_markup=inline.get_exchanges_links(bid_link=arbitrage_data["bid"]["link"],
+                                                             ask_link=arbitrage_data["ask"]["link"],
+                                                             ask_id=arbitrage_data["ask"]["id"],
+                                                             bid_id=arbitrage_data["bid"]["id"]))
+    bot.delete_state(message.from_user.id, message.chat.id)
+
+
+@bot.message_handler(func=lambda message: message.text == 'Выход \U0000274E', state=states.Arbitrage.Start)
+def exit_arbitrage(message: Message):
+    """
+    A handler for exiting the arbitrage process when the user sends the message 'Выход'.
+
+    Args:
+    message (Message): The message object containing the user's input.
 
     Returns:
     None
     """
-    bot.send_message(message.chat.id, f'Добро пожаловать в раздел арбитража криптовалют. '
-                                      f'Данный инструмент сравнивает курсы по выбранным валютным связкам на ваших '
-                                      f'криптобиржах и возвращает выгодные предложения по покупке и продаже',
-                     reply_markup=stack.start_reply())
-    bot.set_state(message.from_user.id, Base_Arbitrage.Start, message.chat.id)  # переходим к состоянию
-
-
-@bot.callback_query_handler(func=lambda call: True, state=Base_Arbitrage.Start)  # пытаемся его отловить
-def order_book(data):
-    """
-    Handles messages when the user's current state is GET_ORDER in the Arbitrage.CryptoArbitrage state machine.
-
-    Parameters:
-        data:
-        message (Message): The message object containing information about the user's input.
-
-    Returns:
-        None
-
-    Raises:
-        None
-    """
-    message = data.message
-    if message.text == 'Начать' or message.text == 'Еще раз':
-        bot.send_message(message.chat.id, 'Выберете валютную связку', reply_markup=stack.symbol_vars())
-    bot.set_state(message.from_user.id, Base_Arbitrage.Choose_pair, message.chat.id)
-
-
-@bot.callback_query_handler(func=lambda call: True, state=Base_Arbitrage.Choose_pair)
-def get_counts(data):
-    """
-    A callback query handler that processes the message and performs various actions based on the message text.
-    Args:
-        data:
-        message: The message object containing information about the user's input.
-
-    Returns: None
-
-    """
-    message = data.message
-    if message.text == 'Ввести свой вариант':
-        order_book(message, False)
-    elif message.text == 'Назад':
-        pass
-    elif not message.text.startswith('/'):
-        symbol = message.text.lstrip()
-        arbitrage_instrument = arbitrage.BestOffer(symbol, message)
-        invoke = bot.send_message(message.chat.id, f'Анализ лучшего предложения в связке {symbol}\n'
-                                                   f'Выбранные биржи: {", ".join(arbitrage_instrument.exchanges)}',
-                                  reply_markup=types.ReplyKeyboardRemove())
-        best = arbitrage_instrument.get_best_offer(message)
-        errors = ', '.join(best["errors"].keys())
-        if len(best['errors'].keys()) == 0:
-            errors_text = 'Анализ произведен на всех выбранных биржах!'
-        else:
-            errors_text = f'Из бирж: {errors} не удалось извлечь данные в связке {symbol}'
-        bot.delete_message(message.chat.id, invoke.message_id)
-        bot.send_message(message.chat.id, f'Время анализа: {best["time"]}\n\n'
-                                          f'Валютная связка: {symbol}\n'
-                                          f'=> Выгодно купить: \nБиржа <code>{best["best_ask"]["id"]}</code>\n'
-                                          f'Цена: {round(best["best_ask"]["value"], ROUND_VALUE)} USDT\n'
-                                          f'Количество: {round(best["best_ask"]["mount"], ROUND_VALUE)}\n'
-                                          f'=> Выгодно продать: \nБиржа <code>{best["best_bid"]["id"]}</code>\n'
-                                          f'Цена: {round(best["best_bid"]["value"], ROUND_VALUE)} USDT\n'
-                                          f'Количество: {round(best["best_bid"]["mount"], ROUND_VALUE)}\n'
-                                          f'Спред при таком исходе составит: {round(best["spread"], ROUND_VALUE)} '
-                                          f'USDT\n\n'
-                                          f'Доступный объем для транзакции: {round(best["volume"], ROUND_VALUE)}\n'
-                                          f'Максимальный выигрыш от сделки: {round(best["profit"], ROUND_VALUE)} USDT'
-                                          f'\n\n{errors_text}',
-                         parse_mode='html', reply_markup=types.ReplyKeyboardRemove())
-        bot.delete_state(message.from_user.id, message.chat.id)
+    bot.send_message(message.chat.id, 'Хорошего дня!\n'
+                                      '/help - документация', reply_markup=types.ReplyKeyboardRemove())
+    bot.delete_state(message.from_user.id, message.chat.id)

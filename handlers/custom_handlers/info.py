@@ -1,4 +1,4 @@
-from telebot.types import Message
+from telebot.types import Message # noqa
 from loader import bot
 from database.userdata import Users
 from datetime import datetime
@@ -8,10 +8,16 @@ import json
 
 @bot.message_handler(commands=["info"])
 def bot_info(message: Message):
+    """
+    Handle the 'info' command for the bot. Retrieves user information and sends a message
+    with the user's registration date,
+    working cryptocurrency exchanges, and any cryptocurrencies on the user's 'bad list'.
+    """
     current_user = Users.get_or_none(Users.user_id == message.from_user.id)
     if current_user.bad_list_currency is None:
         bad_list_exchanges = 'У вас нет криптовалют в черном списке!'
     else:
+
         bad_list_exchanges = (f'Криптовалюты в черном списке:\n'
                               f'{", ".join(json.loads(current_user.bad_list_currency))}')
     exchanges = json.loads(current_user.work_exchanges)

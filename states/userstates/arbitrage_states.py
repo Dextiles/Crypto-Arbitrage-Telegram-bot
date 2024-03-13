@@ -1,7 +1,5 @@
-from telebot.handler_backends import StatesGroup, State
+from telebot.handler_backends import StatesGroup, State # noqa
 
 
-class Base_Arbitrage(StatesGroup):
+class Arbitrage(StatesGroup):
     Start = State()
-    Choose_pair = State()
-    Get_result = State()

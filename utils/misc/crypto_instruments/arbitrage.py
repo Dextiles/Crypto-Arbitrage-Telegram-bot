@@ -1,11 +1,11 @@
 import time
 import ccxt
 from loader import bot
-from telebot.types import Message, ReplyKeyboardRemove # noqa
+from telebot.types import Message, ReplyKeyboardRemove  # noqa
 from typing import NoReturn
 from datetime import datetime
 from config_data.config import DATE_FORMAT_FULL
-from telebot import types as btn # noqa
+from telebot import types as btn  # noqa
 from threading import Thread
 from database.userdata import Users
 import json
@@ -29,31 +29,21 @@ class Exchanges:
         self.__exchanges_obj = [getattr(ccxt, exchange)() for exchange in self.__exchanges]
         self.__load_markets_all(message)
 
-    def __load_markets_all(self, message) -> NoReturn:
+    def __load_markets_all(self, message: Message) -> NoReturn:
         """
         Load all markets for each exchange.
-
-        Args:
-            message (Message): The message object containing the user information.
-
         Returns:
             NoReturn: This function does not return anything.
         """
-        invoke = bot.send_message(message.chat.id, f'Во время загрузки ничего не нажимайте.. ',
+        invoke = bot.send_message(message.chat.id, '\U0001F554 Подождите, идет загрузка бирж...\n'
+                                                   'Пока можете перекусить.. \U0001F355',
                                   reply_markup=ReplyKeyboardRemove())
-        msg = bot.send_message(message.chat.id, 'Ждите, загружаем биржи..')
-        for i, exchange in enumerate(self.__exchanges_obj):
+        for exchange in [exchange for exchange in self.__exchanges_obj if exchange.has['fetchMarkets']]:
             try:
                 exchange.load_markets()
             except Exception as ex:
                 self.__errors[exchange.id] = ex
-            finally:
-                bot.edit_message_text(message_id=msg.message_id,
-                                      chat_id=message.chat.id,
-                                      text=f'Ждите, загружаем биржи.. '
-                                           f'\nВыполнено {round(i / len(self.__exchanges_obj) * 100)}%')
-        bot.delete_message(chat_id=message.chat.id, message_id=msg.message_id)
-        bot.delete_message(chat_id=message.chat.id, message_id=invoke.message_id)
+        bot.delete_message(invoke.chat.id, invoke.message_id)
 
     def universe_fee_calculation(self, exchange, symbol: str, option: str, price: float) \
             -> dict[str, float]:
@@ -75,7 +65,7 @@ class Exchanges:
         """
         try:
             if option not in ('byu', 'sell') and symbol not in exchange.symbols:
-                raise ValueError
+                self.__errors['symbol'] = f'{symbol} not in {exchange.id} symbols'
             date = exchange.calculate_fee(symbol=symbol,
                                           type='limit',
                                           side=option,
@@ -116,91 +106,6 @@ class Exchanges:
 
 
 class BestOffer(Exchanges):
-
-    def __init__(self, symbol: str, message: Message) -> NoReturn:
-        """
-        Initializes an instance of the class with the given symbol and message.
-
-        Parameters:
-            symbol (str): The symbol to be initialized.
-            message (Message): The message to be initialized.
-
-        Returns:
-            NoReturn: This function does not return any value.
-        """
-        super().__init__(message)
-        self._exchanges = super().exchanges
-        self._symbol = symbol
-        self._exchanges_object = super().exchanges_objects
-        self._best_bid = {'id': '', 'value': 0.0, 'mount': 0.0, 'link': ''}
-        self._best_ask = {'id': '', 'value': 0.0, 'mount': 0.0, 'link': ''}
-        self._bad_symbols = dict()
-
-    def _calc_best(self, key: str, value: float, mount: float, exchange_id: str, link: str) -> NoReturn:
-        """
-        Calculate and update the best bid and best ask values based on the given key, value, mount, exchange_id, and link.
-
-        Parameters:
-            key (str): The key indicating whether the value is for bids or asks.
-            value (float): The value to be compared with the current best bid or best ask value.
-            mount (float): The mount associated with the value.
-            exchange_id (str): The ID of the exchange associated with the value.
-            link (str): The URL associated with the value.
-
-        Returns:
-            None
-        """
-        if key == 'bids':
-            if self._best_bid['value'] == 0 or value > self._best_bid['value']:
-                self._best_bid['value'] = value
-                self._best_bid['id'] = exchange_id
-                self._best_bid['mount'] = mount
-                self._best_bid['url'] = link
-        if key == 'asks':
-            if self._best_ask['value'] == 0 or value < self._best_ask['value']:
-                self._best_ask['value'] = value
-                self._best_ask['id'] = exchange_id
-                self._best_ask['mount'] = mount
-                self._best_ask['url'] = link
-
-    def get_best_offer(self, message: Message) -> dict:
-        """
-        Retrieves the best offer for a given message.
-
-        Args:
-            message (Message): The message object.
-
-        Returns:
-            dict: A dictionary containing the best bid, best ask, spread, errors,
-                  time, volume, and profit.
-        """
-        wait_mess = bot.send_message(message.chat.id, 'Ждите...', reply_markup=btn.ReplyKeyboardRemove())
-        for i, exchange in enumerate(self._exchanges_object, start=1):
-            try:
-                if exchange.has['fetchOrderBook'] and self._symbol in exchange.symbols:
-                    orderbook = exchange.fetch_order_book(self._symbol)
-                    self._calc_best('bids', orderbook['bids'][0][0], orderbook['bids'][0][1], exchange,
-                                    exchange.urls['www'])
-                    self._calc_best('asks', orderbook['asks'][0][0], orderbook['asks'][0][1], exchange,
-                                    exchange.urls['www'])
-                else:
-                    raise ValueError
-            except Exception as ex:
-                self._bad_symbols[exchange.id] = ex
-        volume = min(self._best_bid["mount"], self._best_ask['mount'])
-        spread = self._best_bid['value'] - self._best_ask['value']
-        profit = volume * spread
-        bot.delete_message(message_id=wait_mess.message_id, chat_id=message.chat.id)
-        return {'best_bid': self._best_bid,
-                'best_ask': self._best_ask,
-                'spread': spread,
-                'errors': self._bad_symbols,
-                'time': datetime.strftime(datetime.now(), DATE_FORMAT_FULL),
-                'volume': volume,
-                'profit': profit}
-
-
-class BestOfferFull(Exchanges):
     def __init__(self, message: Message):
         """
         Initializes the class instance with the given message.
@@ -224,13 +129,13 @@ class BestOfferFull(Exchanges):
                       'total': 0}
         self._working_directory = dict()
 
-    def _counter(self, sym, exch) -> NoReturn:
+    def _counter(self, sym: str, exchanges: list) -> NoReturn:
         """
         This function is a private method that calculates the best bid and ask prices for a given symbol and exchange.
 
         Parameters:
             sym (str): The symbol to calculate the best prices for.
-            exch (list): A list of exchanges to fetch the order book from.
+            exchanges (list): A list of exchanges to fetch the order book from.
 
         Returns:
             None
@@ -238,12 +143,12 @@ class BestOfferFull(Exchanges):
         Raises:
             None
         """
-        best = {sym: {'ask': 0, 'ask_exc': exch[0],
-                      'bid': 0, 'bid_exc': exch[0],
+        best = {sym: {'ask': 0, 'ask_exc': exchanges[0],
+                      'bid': 0, 'bid_exc': exchanges[0],
                       'ask_lim': 0.0, 'ask_link': '',
                       'bid_lim': 0.0, 'bid_link': '',
                       'СПРЕД': 0.0}}
-        for exchange in exch:
+        for exchange in exchanges:
             try:
                 orderbook = exchange.fetch_order_book(sym)
                 bid, bid_mount = orderbook['bids'][0]
@@ -253,13 +158,13 @@ class BestOfferFull(Exchanges):
                     best[sym]['ask'] = ask
                     best[sym]['ask_exc'] = exchange
                     best[sym]['ask_lim'] = ask_mount
-                    best[sym]['ask_link'] = exchange.links['www']
+                    best[sym]['ask_link'] = exchange.urls['www']
                 if best[sym]['bid'] == 0 or best[sym]['bid'] < bid:
                     best[sym]['bid'] = bid
                     best[sym]['bid_exc'] = exchange
                     best[sym]['bid_lim'] = bid_mount
-                    best[sym]['bid_link'] = exchange.links['www']
-            except Exception as exception: # noqa
+                    best[sym]['bid_link'] = exchange.urls['www']
+            except Exception as exception:  # noqa
                 pass
 
         min_v = min(best[sym]['bid_lim'], best[sym]['ask_lim'])
@@ -277,7 +182,7 @@ class BestOfferFull(Exchanges):
         if spread > 0 and spread > self._best['spread'] and min_v > 0.1 \
                 and best[sym]['ask'] > 0.01 \
                 and best[sym]['bid'] > 0.01 \
-                and spread > 0.1 \
+                and spread > 0.5 \
                 and ask_with_fee['fee'] > 0.0 \
                 and bid_with_fee['fee'] > 0.0 \
                 and spread * min_v > super().min_profit:
@@ -308,21 +213,21 @@ class BestOfferFull(Exchanges):
                         self._working_directory[pair] = [exchange]
                     else:
                         self._working_directory[pair].append(exchange)
-            except Exception as ex: # noqa
+            except Exception as ex:  # noqa
                 pass
 
         for key, value in list(self._working_directory.items()):
             if len(value) < 2:
                 del self._working_directory[key]
 
-        start = bot.send_message(chat_id=self._chat_id, text=f'Обрабатываем пары..')
+        start = bot.send_message(chat_id=self._chat_id, text=f'\U0000231B Обрабатываем пары..')
         for i, (symbol, exchanges) in enumerate(self._working_directory.items()):
-            Thread(target=self._counter, args=(symbol, exchanges)).start()
+            Thread(target=self._counter, args=(symbol, exchanges)).start()  # запуск вычисления
             if i % 10 == 0:
                 time.sleep(0.5)
                 bot.edit_message_text(message_id=start.message_id,
                                       chat_id=self._chat_id,
-                                      text=f'Обработано {i} криптопар')
+                                      text=f'\U0000231B Обработано {i} криптопар')
             self._best['total'] = i
         time.sleep(3)
         bot.delete_message(message_id=start.message_id, chat_id=self._chat_id)
