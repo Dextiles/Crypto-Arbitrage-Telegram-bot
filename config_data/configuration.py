@@ -12,13 +12,12 @@ RAPID_API_KEY = os.getenv("RAPID_API_KEY")
 DEFAULT_COMMANDS = (
     ("start", "Начать работу"),
     ("help", "Документация по использованию"),
-    ("info", "Информация о текущем пользователе"),
+    ("config", "Настройка пользовательских настроек арбитража"),
     ("arbitrage", "Инструмент для арбитража критовалют"),
     ("developer", "Информация о разработчике")
 )
 DATE_FORMAT = "%d.%m.%Y"
 TIME_FORMAT = "%H:%M:%S"
 DATE_FORMAT_FULL = "%d.%m.%Y, %H:%M:%S"
-ADDRESS_db = 'database/userdata.sql'
-STATES_db = 'database/userstates.vdb'
+DATE_FORMAT_IN = "%d.%m.%Y в %H:%M:%S (по Мск)"
 ROUND_VALUE = 5

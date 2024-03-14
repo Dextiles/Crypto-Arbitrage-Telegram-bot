@@ -4,10 +4,10 @@ from loader import bot
 from telebot.types import Message, ReplyKeyboardRemove  # noqa
 from typing import NoReturn
 from datetime import datetime
-from config_data.config import DATE_FORMAT_FULL
+from config_data.configuration import DATE_FORMAT_FULL
 from telebot import types as btn  # noqa
 from threading import Thread
-from database.userdata import Users
+from database.userdata_model import Users
 import json
 
 

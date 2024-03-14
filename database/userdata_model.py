@@ -1,9 +1,8 @@
 from peewee import SqliteDatabase, Model, CharField, IntegerField, DateTimeField
-from config_data.config import ADDRESS_db
 from datetime import datetime
 import json
 
-db = SqliteDatabase(ADDRESS_db)
+db = SqliteDatabase('database/userdata.sql')
 
 
 class Users(Model):
@@ -12,14 +11,15 @@ class Users(Model):
     first_name = CharField()
     last_surname = CharField(null=True)
     reg_date = DateTimeField(default=datetime.now())
-    bad_list_currency = CharField(null=True)
+    bad_list_currency = CharField(default=json.dumps([]))
     default_profit = IntegerField(default=5)
     work_exchanges = CharField(default=json.dumps([
     "binance", "bybit", "okx", "kucoin",
-    "kraken",
     "upbit", "gateio", "gemini",
     "coinbase", "cryptocom"]), null=False)
-    user_state = IntegerField(default=0)
+    last_request = DateTimeField(default=datetime.now())
+    work_symbols = CharField(default=json.dumps([]))
+    work_symbols_date_analysis = DateTimeField(default=datetime.now())
 
     class Meta:
         database = db

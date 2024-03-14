@@ -2,13 +2,14 @@ from telebot.types import Message  # noqa
 from telebot import types  # noqa
 from loader import bot
 from keyboards.reply import arbitrage_replies as stack
-from keyboards.inline import crypto_instruments_key as inline  # noqa
+from keyboards.inline import crypto_instruments_btns as inline  # noqa
 from utils.misc.crypto_instruments import arbitrage
-from config_data.config import ROUND_VALUE
+from config_data.configuration import ROUND_VALUE
 from datetime import datetime
-from config_data.config import DATE_FORMAT_FULL
-import states.userstates.arbitrage_states as Arbitrage  # noqa
-from states.userstates import arbitrage_states as states
+from config_data.configuration import DATE_FORMAT_FULL
+import states.userstates.bot_states as Arbitrage  # noqa
+from states.userstates import bot_states as states
+from database import userdata_controller as bd_controller
 
 
 @bot.message_handler(commands=["arbitrage"])
@@ -19,6 +20,7 @@ def start_arbitrage(message: Message):
     Sends a welcome message about cryptocurrency arbitrage to the chat and
     sets the user's state to the start of the arbitrage process.
     """
+    bd_controller.update_last_request_time(message)
     bot.send_message(message.chat.id, f'\U0001F310 Добро пожаловать в арбитраж криптовалют!\n'
                                       f'мы полностью проанализируем ваши биржи и найдем лучшие связки и предложения',
                      reply_markup=stack.create_start_reply())
@@ -33,6 +35,7 @@ def get_best(message: Message):
     buy and sell details, net spread, available currency for operation, and total profit.
     Removes the reply keyboard and deletes the state after execution.
     """
+    bd_controller.update_last_request_time(message)
     arbitrage_data = arbitrage.BestOffer(message).get_best_offer()
     bot.send_message(message.chat.id,
                      f'Запрос актуален на \U0001F554 '
@@ -70,6 +73,8 @@ def exit_arbitrage(message: Message):
     Returns:
     None
     """
+    bd_controller.update_last_request_time(message)
     bot.send_message(message.chat.id, 'Хорошего дня!\n'
                                       '/help - документация', reply_markup=types.ReplyKeyboardRemove())
     bot.delete_state(message.from_user.id, message.chat.id)
+

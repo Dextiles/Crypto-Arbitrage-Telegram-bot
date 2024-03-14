@@ -1,8 +1,9 @@
-from telebot.types import Message # noqa
+from telebot.types import Message  # noqa
 from loader import bot
-from peewee import *
-from database.userdata import Users
-from telebot import types # noqa
+from database import userdata_controller as bd_controller
+from telebot import types  # noqa
+from config_data.configuration import DATE_FORMAT_IN
+from datetime import datetime
 
 
 @bot.message_handler(commands=["start"])
@@ -14,19 +15,12 @@ def bot_start(message: Message):
     - message: Message - the message object triggering the command
     """
     invoke_text = 'Это сервис по арбитражу криптовалют!'
-    try:
-        Users.create(
-            user_id=message.from_user.id,
-            username=message.from_user.username,
-            first_name=message.from_user.first_name,
-            last_name=message.from_user.last_name,
-        )
-        bot.send_message(message.chat.id, f"Добро пожаловать, вы у нас впервые!\n"
-                                          f"{invoke_text}",
-                         reply_markup=types.ReplyKeyboardRemove())
-    except IntegrityError:
-        bot.send_message(message.chat.id, f'Рад вас снова видеть, {message.from_user.full_name}\n'
-                                          f'{invoke_text}!',
-                         reply_markup=types.ReplyKeyboardRemove())
-    finally:
-        pass
+    if bd_controller.create(message):
+        bot.send_message(message.chat.id, invoke_text)
+    else:
+        current_user = bd_controller.get(message)
+        bot.send_message(message.chat.id,
+                         f'Рад вас снова видеть, {current_user.first_name}!\n'
+                         f'Ваш последний запрос был {datetime.strftime(current_user.last_request, DATE_FORMAT_IN)}\n'
+                         f'С этого момента многое изменилось!')
+        bd_controller.update_last_request_time(message)
