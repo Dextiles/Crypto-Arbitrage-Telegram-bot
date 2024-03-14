@@ -17,3 +17,10 @@ class ConfigView:
                                   f'{", ".join(*[list_symbols])}\n\n')
         return bad_list_exchanges
 
+    def show_working_exchanges_list(self) -> str:
+        if len(json.loads(self._current_user.work_exchanges)) == 0:
+            exchanges = 'У вас нет рабочих криптобирж!\n'
+        else:
+            exchanges = (f'Ваши рабочие криптобиржы (Всего: {len(json.loads(self._current_user.work_exchanges))} из 9):\n'
+                         f'{", ".join(json.loads(self._current_user.work_exchanges))}\n\n')
+        return exchanges

@@ -1,5 +1,5 @@
 from loader import bot
-from telebot.custom_filters import StateFilter # noqa
+from telebot.custom_filters import StateFilter, IsDigitFilter # noqa
 import handlers  # noqa
 from utils.set_bot_commands import set_default_commands
 
