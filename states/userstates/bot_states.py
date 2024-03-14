@@ -9,4 +9,5 @@ class UserSettings(StatesGroup):
     Start = State()
     Choose_what_to_change = State()
     CryptoCurrency = State()
-
+    Exchange = State()
+    Profit = State()

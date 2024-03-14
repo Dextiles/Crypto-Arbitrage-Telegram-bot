@@ -10,7 +10,7 @@ def get_start_config_reply() -> types.ReplyKeyboardMarkup:
     return markup
 
 
-def get_options_to_config() -> types.ReplyKeyboardMarkup:
+def get_options_to_config_button() -> types.ReplyKeyboardMarkup:
     """
     A function to initialize a reply keyboard markup with two buttons for starting and exiting.
     """
@@ -20,7 +20,7 @@ def get_options_to_config() -> types.ReplyKeyboardMarkup:
     return markup
 
 
-def go_exit() -> types.ReplyKeyboardMarkup:
+def go_exit_button() -> types.ReplyKeyboardMarkup:
     """
     A function to initialize a reply keyboard markup with two buttons for starting and exiting.
     """
@@ -29,10 +29,22 @@ def go_exit() -> types.ReplyKeyboardMarkup:
     return markup
 
 
-def go_exit_or_clear() -> types.ReplyKeyboardMarkup:
+def get_go_exit_or_clear_buttons() -> types.ReplyKeyboardMarkup:
     """
     A function to initialize a reply keyboard markup with two buttons for starting and exiting.
     """
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=1)
     markup.row(types.KeyboardButton('Очистить черный список'), types.KeyboardButton('Выход'))
+    return markup
+
+
+def get_exchanges_buttons() -> types.ReplyKeyboardMarkup:
+    """
+    A function to initialize a reply keyboard markup with two buttons for starting and exiting.
+    """
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=1)
+    markup.row(types.KeyboardButton('binance'), types.KeyboardButton("bybit"), types.KeyboardButton("okx"))
+    markup.row(types.KeyboardButton("kucoin"), types.KeyboardButton("upbit"), types.KeyboardButton("gateio"))
+    markup.row(types.KeyboardButton("gemini"), types.KeyboardButton("coinbase"), types.KeyboardButton("cryptocom"))
+    markup.row(types.KeyboardButton('Выход'))
     return markup
