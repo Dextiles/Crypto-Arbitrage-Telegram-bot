@@ -20,6 +20,7 @@ def start_arbitrage(message: Message):
     Sends a welcome message about cryptocurrency arbitrage to the chat and
     sets the user's state to the start of the arbitrage process.
     """
+    bd_controller.create(message)
     bd_controller.update_last_request_time(message)
     bot.send_message(message.chat.id, f'\U0001F310 Добро пожаловать в арбитраж криптовалют!\n'
                                       f'мы полностью проанализируем ваши биржи и найдем лучшие связки и предложения',

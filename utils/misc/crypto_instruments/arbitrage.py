@@ -3,12 +3,10 @@ import ccxt
 from loader import bot
 from telebot.types import Message, ReplyKeyboardRemove  # noqa
 from typing import NoReturn
-from datetime import datetime
-from config_data.configuration import DATE_FORMAT_FULL
 from telebot import types as btn  # noqa
 from threading import Thread
-from database.userdata_model import Users
 import json
+from database import userdata_controller as db_controller
 
 
 class Exchanges:
@@ -22,9 +20,10 @@ class Exchanges:
         Returns:
             NoReturn: This function does not return anything.
         """
-        self.__current_user = Users.get_or_none(Users.user_id == message.from_user.id)
+        self.__current_user = db_controller.get(message)
         self.__exchanges = json.loads(self.__current_user.work_exchanges)
         self.__min_profit = self.__current_user.default_profit
+        self.__bad_list_values = json.loads(self.__current_user.bad_list_currency)
         self.__errors = dict()
         self.__exchanges_obj = [getattr(ccxt, exchange)() for exchange in self.__exchanges]
         self.__load_markets_all(message)
@@ -96,13 +95,9 @@ class Exchanges:
     def exchanges(self) -> list:
         return self.__exchanges
 
-    @exchanges.setter
-    def exchanges(self, *new_exchanges):
-        for exchange in new_exchanges:
-            if exchange in ccxt.exchanges:
-                self.__exchanges.append(exchange)
-            else:
-                pass
+    @property
+    def bad_list_values(self) -> list:
+        return self.__bad_list_values
 
 
 class BestOffer(Exchanges):
@@ -222,12 +217,13 @@ class BestOffer(Exchanges):
 
         start = bot.send_message(chat_id=self._chat_id, text=f'\U0000231B Обрабатываем пары..')
         for i, (symbol, exchanges) in enumerate(self._working_directory.items()):
-            Thread(target=self._counter, args=(symbol, exchanges)).start()  # запуск вычисления
-            if i % 10 == 0:
-                time.sleep(0.5)
-                bot.edit_message_text(message_id=start.message_id,
-                                      chat_id=self._chat_id,
-                                      text=f'\U0000231B Обработано {i} криптопар')
+            if symbol.split('/USDT')[0] not in super().bad_list_values:
+                Thread(target=self._counter, args=(symbol, exchanges)).start()  # запуск вычисления
+                if i % 10 == 0:
+                    time.sleep(0.5)
+                    bot.edit_message_text(message_id=start.message_id,
+                                          chat_id=self._chat_id,
+                                          text=f'\U0000231B Обработано {i} криптопар')
             self._best['total'] = i
         time.sleep(3)
         bot.delete_message(message_id=start.message_id, chat_id=self._chat_id)

@@ -11,6 +11,7 @@ def about_me(message: Message):
     Takes a Message object as a parameter.
     Returns None.
     """
+    bd_controller.create(message)
     bot.send_message(message.chat.id, '\U0001F464 Разработчик сервиса: Иван Пермяков\n'
                                       'Основной директ, сотрудничество: @Dextiles\n\n',
                      reply_markup=about_developer_btns.get_about_developer_markup())

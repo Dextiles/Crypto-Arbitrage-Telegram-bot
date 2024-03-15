@@ -7,6 +7,8 @@ from database import userdata_controller as bd_controller
 from database import userdata_view as bd_view
 from keyboards.reply import config_replies as reply
 from states.userstates.bot_states import UserSettings
+from database.default_values_config.default_getter import GetDefaultValues
+from fastnumbers import isfloat
 from utils.misc.crypto_instruments.get_actual_symbols import get_actual_symbols
 
 
@@ -23,6 +25,7 @@ def bot_info(message: Message):
     Returns:
         None
     """
+    bd_controller.create(message)
     current_user = bd_controller.get(message)
     bad_list_exchanges = bd_view.ConfigView(message).show_currency_in_black_list()
     bot.send_message(message.chat.id,
@@ -30,7 +33,7 @@ def bot_info(message: Message):
                      f'{datetime.strftime(current_user.reg_date, DATE_FORMAT_FULL)}\n\n'
                      f'{bd_view.ConfigView(message).show_working_exchanges_list()}\n'
                      f'{bad_list_exchanges}\n'
-                     f'Ваш установленный профит по арбиртражу: {current_user.default_profit}USDT\n\n'
+                     f'Ваш установленный профит по арбиртражу: {current_user.default_profit} USDT\n\n'
                      f'Дата последнего запроса на сервисе:\n'
                      f'{datetime.strftime(current_user.last_request, DATE_FORMAT_IN)}',
                      reply_markup=reply.get_start_config_reply())
@@ -55,7 +58,7 @@ def start_config(message: Message):
 
 
 @bot.message_handler(func=lambda message: message.text == 'Выход',
-                     state=(UserSettings.Choose_what_to_change, UserSettings.Start))
+                     state=UserSettings.Choose_what_to_change)
 def exit_config(message: Message):
     """
     A function to handle exiting configuration settings.
@@ -79,17 +82,7 @@ def choose_what_to_change(message: Message):
     Takes a message of type Message as input.
     """
     bd_controller.update_last_request_time(message)
-    if bd_controller.is_time_out(message, 24) or len(json.loads(bd_controller.get(message).work_symbols)) == 0:
-        invoke = bot.send_message(message.chat.id, f'Подождите, выполняется обновление списка криптовалют...\n'
-                                                   f'Данная процедура выполняется раз в сутки, '
-                                                   f'последнее обновление: '
-                                                   f'{datetime.strftime(bd_controller.get(message).work_symbols_date_analysis, DATE_FORMAT_FULL)}',
-                                  reply_markup=ReplyKeyboardRemove())
-        symbols = get_actual_symbols(exchanges=json.loads(bd_controller.get(message).work_exchanges))
-        bot.delete_message(invoke.chat.id, invoke.message_id)
-    else:
-        symbols = json.loads(bd_controller.get(message).work_symbols)
-    bd_controller.update(message, work_symbols=json.dumps(list(symbols)))
+    get_actual_symbols(message)
     bot.send_message(message.chat.id, f'Напишите код криптовалюты, '
                                       f'которую хотите добавить в черный список (исключить из черного списка)\n'
                                       f'{bd_view.ConfigView(message).show_currency_in_black_list()}',
@@ -108,9 +101,11 @@ def cryptocurrency_configuration(message: Message):
     """
     bd_controller.update_last_request_time(message)
     message.text = message.text.upper()
-    work_symbols = json.loads(bd_controller.get(message).work_symbols)
+    work_symbols = json.loads(bd_controller.get_common().allowed_symbols)
     bad_list_currency = json.loads(bd_controller.get(message).bad_list_currency)
-    if message.text in work_symbols and message.text not in bad_list_currency and len(bad_list_currency) < 40:
+    if (message.text in work_symbols and
+            message.text not in bad_list_currency and
+            len(bad_list_currency) < int(GetDefaultValues().max_bad_list_size)):
         bad_list_currency.append(message.text)
         bd_controller.update(message, bad_list_currency=json.dumps(bad_list_currency))
         bot.send_message(message.chat.id,
@@ -128,7 +123,7 @@ def cryptocurrency_configuration(message: Message):
         bot.send_message(message.chat.id, f'Вы не можете удалить USDT из арбитража!\n'
                                           f'{bd_view.ConfigView(message).show_currency_in_black_list()}'
                                           f'Пожалуйста, напишите другую валюту, либо нажмите "Выход"')
-    elif len(bad_list_currency) >= 40:
+    elif len(bad_list_currency) >= int(GetDefaultValues().max_bad_list_size):
         bot.send_message(message.chat.id, f'Достигнут максимальный размер черного списка!\n'
                                           f'{bd_view.ConfigView(message).show_currency_in_black_list()}'
                                           f'Чтобы добавить валюту, сперва освободите место, '
@@ -193,7 +188,7 @@ def set_exchanges(message: Message):
     bot.set_state(message.chat.id, UserSettings.Exchange, message.chat.id)
 
 
-@bot.message_handler(func=lambda message: message.text in ["binance", "bybit", "okx", "kucoin", "upbit", "gateio", "gemini", "coinbase", "cryptocom"],
+@bot.message_handler(func=lambda message: message.text in GetDefaultValues().exchanges,
                      state=UserSettings.Exchange)
 def set_exchanges(message: Message):
     """
@@ -252,7 +247,7 @@ def choose_profit(message: Message):
     bot.set_state(message.chat.id, UserSettings.Profit, message.chat.id)
 
 
-@bot.message_handler(func=lambda message: message.text.isdigit(), state=UserSettings.Profit)
+@bot.message_handler(func=lambda message: isfloat(message.text) or message.text.isdigit(), state=UserSettings.Profit)
 def set_profit(message: Message):
     """
     A message handler that sets the profit in the UserSettings for a given message.
@@ -264,14 +259,13 @@ def set_profit(message: Message):
     None
     """
     bd_controller.update_last_request_time(message)
-    bd_controller.update(message, default_profit=int(message.text))
-    bot.send_message(message.chat.id, f'Вы установили профит в {message.text} USDT!\n'
-                                      f'{bd_controller.get(message).default_profit}USDT',
+    bd_controller.update(message, default_profit=float(message.text))
+    bot.send_message(message.chat.id, f'Вы установили профит в {message.text} USDT!\n',
                      reply_markup=ReplyKeyboardRemove())
     bot.delete_state(message.from_user.id, message.chat.id)
 
 
-@bot.message_handler(func=lambda message: not message.text.isdigit(), state=UserSettings.Profit)
+@bot.message_handler(func=lambda message: not isfloat(message.text) or not message.text.isdigit(), state=UserSettings.Profit)
 def error_profit(message: Message):
     """
     A message handler for handling non-digit messages in the Profit state.

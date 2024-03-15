@@ -20,6 +20,11 @@ def create(message: Message) -> bool:
             username=message.from_user.username,
             first_name=message.from_user.first_name,
             last_name=message.from_user.last_name)
+
+        userdata_model.WorkDirectory.create(
+            work_symbols_date_analysis=None,
+        )
+
     except IntegrityError:
         return False
     else:
@@ -37,10 +42,23 @@ def get(message: Message) -> userdata_model.Users:
         userdata_model.Users: The user data retrieved based on the provided message.
     """
     try:
-        return userdata_model.Users.get(user_id=message.from_user.id)
-    except IntegrityError:
+        return userdata_model.Users.get_or_none(user_id=message.from_user.id)
+    except Exception as ex:
         if create(message):
-            return userdata_model.Users.get(user_id=message.from_user.id)
+            return userdata_model.Users.get_or_none(user_id=message.from_user.id)
+
+
+def get_common() -> userdata_model.WorkDirectory:
+    return userdata_model.WorkDirectory.get_or_none()
+
+
+def update_common(**kwargs) -> bool:
+    try:
+        userdata_model.WorkDirectory.update(**kwargs).execute()
+    except Exception as ex:
+        return False
+    else:
+        return True
 
 
 def update(message: Message, **kwargs) -> bool:
@@ -74,7 +92,7 @@ def delete(message: Message) -> bool:
     """
     try:
         userdata_model.Users.delete().where(userdata_model.Users.user_id == message.from_user.id).execute()
-    except IntegrityError:
+    except Exception as ex:
         return False
     else:
         return True
@@ -92,21 +110,23 @@ def update_last_request_time(message: Message) -> bool:
     """
     try:
         update(message, last_request=datetime.now())
-    except IntegrityError:
+    except Exception as ex:
         return False
     else:
         return True
 
 
-def is_time_out(message: Message, hours: int) -> bool:
+def is_time_out(hours: int) -> bool:
     """
     A function to check if the time for a message is out based on a specified number of hours.
 
     Args:
-        message (Message): The message object to check the time for.
         hours (int): The number of hours to compare the message time against.
 
     Returns:
         bool: True if the message time is older than the specified hours, False otherwise.
     """
-    return datetime.now() - get(message).work_symbols_date_analysis > timedelta(hours=hours)
+    if get_common().work_symbols_date_analysis is None:
+        return True
+    else:
+        return datetime.now() - get_common().work_symbols_date_analysis > timedelta(hours=hours)
