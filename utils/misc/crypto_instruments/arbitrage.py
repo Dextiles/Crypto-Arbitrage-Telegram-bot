@@ -7,6 +7,7 @@ from telebot import types as btn  # noqa
 from threading import Thread
 import json
 from database import userdata_controller as db_controller
+from utils.misc.logger import Logger
 
 
 class Exchanges:
@@ -20,11 +21,11 @@ class Exchanges:
         Returns:
             NoReturn: This function does not return anything.
         """
+        self._logger = Logger(message)
         self.__current_user = db_controller.get(message)
         self.__exchanges = json.loads(self.__current_user.work_exchanges)
         self.__min_profit = self.__current_user.default_profit
         self.__bad_list_values = json.loads(self.__current_user.bad_list_currency)
-        self.__errors = dict()
         self.__exchanges_obj = [getattr(ccxt, exchange)() for exchange in self.__exchanges]
         self.__load_markets_all(message)
 
@@ -41,7 +42,7 @@ class Exchanges:
             try:
                 exchange.load_markets()
             except Exception as ex:
-                self.__errors[exchange.id] = ex
+                self._logger.log_exception(error=ex, func_name='__load_markets_all', handler_name='arbitrage')
         bot.delete_message(invoke.chat.id, invoke.message_id)
 
     def universe_fee_calculation(self, exchange, symbol: str, option: str, price: float) \
@@ -64,7 +65,7 @@ class Exchanges:
         """
         try:
             if option not in ('byu', 'sell') and symbol not in exchange.symbols:
-                self.__errors['symbol'] = f'{symbol} not in {exchange.id} symbols'
+                raise ValueError(f'Exchange {exchange.id} does not support symbol {symbol}.')
             date = exchange.calculate_fee(symbol=symbol,
                                           type='limit',
                                           side=option,
@@ -76,16 +77,11 @@ class Exchanges:
                 'fee_cost': price - float(date['cost'])
             }
         except Exception as ex:
-            print(ex)
-            self.__errors['fee'] = ex
+            self._logger.log_exception(error=ex, func_name='universe_fee_calculation', handler_name='arbitrage')
 
     @property
     def min_profit(self) -> int:
         return self.__min_profit
-
-    @property
-    def errors(self) -> dict[str, str]:
-        return self.__errors
 
     @property
     def exchanges_objects(self):
@@ -111,6 +107,7 @@ class BestOffer(Exchanges):
         Returns:
             None
         """
+        self._logger = Logger(message)
         self._chat_id = message.chat.id
         super().__init__(message)
         self._exchanges = super().exchanges
@@ -159,8 +156,8 @@ class BestOffer(Exchanges):
                     best[sym]['bid_exc'] = exchange
                     best[sym]['bid_lim'] = bid_mount
                     best[sym]['bid_link'] = exchange.urls['www']
-            except Exception as exception:  # noqa
-                pass
+            except Exception as exception:
+                self._logger.log_exception(error=exception, func_name='_counter', handler_name='arbitrage')
 
         min_v = min(best[sym]['bid_lim'], best[sym]['ask_lim'])
         ask_with_fee = super().universe_fee_calculation(exchange=best[sym]['ask_exc'],
@@ -208,8 +205,8 @@ class BestOffer(Exchanges):
                         self._working_directory[pair] = [exchange]
                     else:
                         self._working_directory[pair].append(exchange)
-            except Exception as ex:  # noqa
-                pass
+            except Exception as ex:
+                self._logger.log_exception(error=ex, func_name='get_best_offer', handler_name='arbitrage')
 
         for key, value in list(self._working_directory.items()):
             if len(value) < 2:

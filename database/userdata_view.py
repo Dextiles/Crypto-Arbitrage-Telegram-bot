@@ -1,22 +1,24 @@
 from database import userdata_controller
 from telebot.types import Message  # noqa
 import json
-from config_data.configuration import DATE_FORMAT_FULL
-from datetime import datetime
-
-
-def get_last_update():
-    if userdata_controller.get_common().work_symbols_date_analysis is None:
-        return 'Запросов ранее не было!'
-    else:
-        return f' Последний запрос: {datetime.strftime(userdata_controller.get_common().work_symbols_date_analysis, DATE_FORMAT_FULL)}\n'
 
 
 class ConfigView:
     def __init__(self, message: Message):
+        """
+        Initialize the class with the provided message.
+
+        Parameters:
+            message (Message): The message object to initialize the class with.
+        """
         self._current_user = userdata_controller.get(message)
 
     def show_currency_in_black_list(self) -> str:
+        """
+        Generate a string containing the cryptocurrencies in the user's black list.
+        Returns:
+            str: A string displaying the cryptocurrencies in the black list.
+        """
         if len(json.loads(self._current_user.bad_list_currency)) == 0:
             bad_list_cur = 'У вас нет криптовалют в черном списке!\n'
         else:
@@ -26,6 +28,12 @@ class ConfigView:
         return bad_list_cur
 
     def show_working_exchanges_list(self) -> str:
+        """
+        A function that shows the list of working exchanges for the current user.
+        Returns a string containing the list of exchanges or a message if there are no exchanges.
+        Returns:
+            str: A string containing the list of exchanges
+        """
         if len(json.loads(self._current_user.work_exchanges)) == 0:
             exchanges = 'У вас нет рабочих криптобирж!\n'
         else:

@@ -10,6 +10,7 @@ from config_data.configuration import DATE_FORMAT_FULL
 import states.userstates.bot_states as Arbitrage  # noqa
 from states.userstates import bot_states as states
 from database import userdata_controller as bd_controller
+from utils.misc.logger import Logger
 
 
 @bot.message_handler(commands=["arbitrage"])
@@ -20,10 +21,12 @@ def start_arbitrage(message: Message):
     Sends a welcome message about cryptocurrency arbitrage to the chat and
     sets the user's state to the start of the arbitrage process.
     """
+    Logger(message).log_activity('arbitrage')
     bd_controller.create(message)
     bd_controller.update_last_request_time(message)
     bot.send_message(message.chat.id, f'\U0001F310 Добро пожаловать в арбитраж криптовалют!\n'
-                                      f'мы полностью проанализируем ваши биржи и найдем лучшие связки и предложения',
+                                      f'Бот полностью проанализируем ваши биржи и найдем лучшие связки и предложения\n'
+                                      f'Перед началом работы, рекомендуем установить настройки - /config. \n\n',
                      reply_markup=stack.create_start_reply())
     bot.set_state(message.from_user.id, states.Arbitrage.Start, message.chat.id)
 
@@ -42,7 +45,7 @@ def get_best(message: Message):
                      f'Запрос актуален на \U0001F554 '
                      f'{datetime.strftime(datetime.now(), DATE_FORMAT_FULL)}\n\n'
                      f'\U0001F4CC Обработано {arbitrage_data["total"]} криптопар на избранных биржах '
-                     f'(/info - просмотр ваших настроек)\n\n'
+                     f'(/config - просмотр ваших настроек)\n\n'
                      f'\U00002757 Выгодная связка: {arbitrage_data["symbol"]} \U00002757\n'
                      f'\U00002795 Купить: {arbitrage_data["ask"]["id"]}, цена '
                      f'{round(arbitrage_data["ask"]["value"], ROUND_VALUE)} USDT\n'

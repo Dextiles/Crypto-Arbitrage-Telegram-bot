@@ -15,6 +15,7 @@ def get_options_to_config_button() -> types.ReplyKeyboardMarkup:
     A function to initialize a reply keyboard markup with two buttons for starting and exiting.
     """
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=1)
+    markup.row(types.KeyboardButton('Сбросить все настройки'))
     markup.row(types.KeyboardButton('Криптобиржи'), types.KeyboardButton('Криптовалюты'))
     markup.row(types.KeyboardButton('Профит'), types.KeyboardButton('Выход'))
     return markup

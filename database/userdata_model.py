@@ -38,6 +38,13 @@ class Users(Model):
 
 
 class WorkDirectory(Model):
+    """
+        Represents the work directory in the system.
+
+        Attributes:
+        - work_symbols_date_analysis: DateTimeField - the date of the last analysis of the symbols
+        - allowed_symbols: CharField - the allowed symbols in the work directory
+        """
     work_symbols_date_analysis = DateTimeField(null=True)
     allowed_symbols = CharField(null=True)
 

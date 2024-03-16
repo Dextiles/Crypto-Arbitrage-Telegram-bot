@@ -22,14 +22,29 @@ class GetDefaultValues:
         self.__default_data = get_data()
 
     @property
-    def exchanges(self):
+    def exchanges(self) -> list:
+        """
+        Returns the list of exchanges stored in the private attribute __default_data['exchanges'].
+
+        :return: A list of exchanges.
+        :rtype: list
+        """
         return self.__default_data['exchanges']
 
     @property
-    def profit(self):
+    def profit(self) -> float:
+        """
+        Returns the profit value from the default data.
+        :return: A float representing the profit value.
+        """
         return self.__default_data['profit']
 
     @property
-    def max_bad_list_size(self):
+    def max_bad_list_size(self) -> int:
+        """
+        A property method that returns the max_bad_list_size from the default_data dictionary.
+        Returns:
+            int: The max_bad_list_size value.
+        """
         return self.__default_data['max_bad_list_size']
 

@@ -10,6 +10,7 @@ from states.userstates.bot_states import UserSettings
 from database.default_values_config.default_getter import GetDefaultValues
 from fastnumbers import isfloat
 from utils.misc.crypto_instruments.get_actual_symbols import get_actual_symbols
+from utils.misc.logger import Logger
 
 
 @bot.message_handler(commands=["config"])
@@ -25,6 +26,7 @@ def bot_info(message: Message):
     Returns:
         None
     """
+    Logger(message).log_activity('config')
     bd_controller.create(message)
     current_user = bd_controller.get(message)
     bad_list_exchanges = bd_view.ConfigView(message).show_currency_in_black_list()
@@ -286,4 +288,22 @@ def exit_config(message: Message):
     bd_controller.update_last_request_time(message)
     bot.send_message(message.chat.id, 'Вы вышли из настройки\n/help - для просмотра доступных команд',
                      reply_markup=ReplyKeyboardRemove())
+    bot.delete_state(message.from_user.id, message.chat.id)
+
+
+@bot.message_handler(func=lambda message: message.text == 'Сбросить все настройки', state=UserSettings.Choose_what_to_change)
+def set_to_default(message: Message):
+    """
+    A message handler that sets the default values in the UserSettings for a given message.
+
+    Parameters:
+    message (Message): The message object containing the default values.
+
+    Returns:
+    None
+    """
+    bd_controller.update_last_request_time(message)
+    bd_controller.set_default(message)
+    bot.send_message(message.chat.id,
+                     'Вы сбросили настройки! Установлены изначальные значения, для просмотра - напишите /config')
     bot.delete_state(message.from_user.id, message.chat.id)

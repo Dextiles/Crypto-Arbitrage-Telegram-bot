@@ -4,6 +4,7 @@ from database import userdata_controller as bd_controller
 from telebot import types  # noqa
 from config_data.configuration import DATE_FORMAT_IN
 from datetime import datetime
+from utils.misc.logger import Logger
 
 
 @bot.message_handler(commands=["start"])
@@ -14,6 +15,7 @@ def bot_start(message: Message):
     Parameters:
     - message: Message - the message object triggering the command
     """
+    Logger(message).log_activity('start')
     invoke_text = 'Это сервис по арбитражу криптовалют!'
     if bd_controller.create(message):
         bot.send_message(message.chat.id, invoke_text)

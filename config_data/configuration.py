@@ -21,3 +21,6 @@ TIME_FORMAT = "%H:%M:%S"
 DATE_FORMAT_FULL = "%d.%m.%Y, %H:%M:%S"
 DATE_FORMAT_IN = "%d.%m.%Y в %H:%M:%S (по Мск)"
 ROUND_VALUE = 5
+TIME = "%H:%M:%S"
+DATE = "%d-%m-%Y"
+Y = '%Y'

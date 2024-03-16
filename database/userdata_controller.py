@@ -2,6 +2,8 @@ from telebot.types import Message  # noqa
 from database import userdata_model
 from peewee import *
 from datetime import datetime, timedelta
+from database.default_values_config.default_getter import GetDefaultValues
+import json
 
 
 def create(message: Message) -> bool:
@@ -49,10 +51,16 @@ def get(message: Message) -> userdata_model.Users:
 
 
 def get_common() -> userdata_model.WorkDirectory:
+    """
+    This function returns the common WorkDirectory object.
+    """
     return userdata_model.WorkDirectory.get_or_none()
 
 
 def update_common(**kwargs) -> bool:
+    """
+    A function that updates a common entity using the provided keyword arguments and returns a boolean indicating success.
+    """
     try:
         userdata_model.WorkDirectory.update(**kwargs).execute()
     except Exception as ex:
@@ -130,3 +138,24 @@ def is_time_out(hours: int) -> bool:
         return True
     else:
         return datetime.now() - get_common().work_symbols_date_analysis > timedelta(hours=hours)
+
+
+def set_default(message: Message) -> bool:
+    """
+    A function that sets default values in a message.
+
+    Parameters:
+    - message (Message): The message to update with default values.
+
+    Returns:
+    - bool: True if the default values were set successfully, False otherwise.
+    """
+    try:
+        update(message,
+               default_profit=GetDefaultValues().profit,
+               bad_list_currency=json.dumps([]),
+               work_exchanges=json.dumps(GetDefaultValues().exchanges))
+    except Exception as ex:
+        return False
+    else:
+        return True
