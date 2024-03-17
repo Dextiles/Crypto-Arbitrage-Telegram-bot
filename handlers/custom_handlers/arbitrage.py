@@ -11,28 +11,31 @@ import states.userstates.bot_states as Arbitrage  # noqa
 from states.userstates import bot_states as states
 from database import userdata_controller as bd_controller
 from utils.misc.logger import Logger
+from typing import NoReturn
 
 
 @bot.message_handler(commands=["arbitrage"])
-def start_arbitrage(message: Message):
+def start_arbitrage(message: Message) -> NoReturn:
     """
     A function to handle the 'arbitrage' command message.
     Takes a Message object as a parameter.
     Sends a welcome message about cryptocurrency arbitrage to the chat and
     sets the user's state to the start of the arbitrage process.
     """
-    Logger(message).log_activity('arbitrage')
     bd_controller.create(message)
+    Logger(message).log_activity('arbitrage')
     bd_controller.update_last_request_time(message)
     bot.send_message(message.chat.id, f'\U0001F310 Добро пожаловать в арбитраж криптовалют!\n'
-                                      f'Бот полностью проанализируем ваши биржи и найдем лучшие связки и предложения\n'
+                                      f'Бот полностью проанализируем ваши биржи и найдем лучшие связки и предложения\n\n'
+                                      f'Ключ к успеху: Правильно настроенный бот: Правильно настроенный бот - '
+                                      f'богатство в доме\n\n'
                                       f'Перед началом работы, рекомендуем установить настройки - /config. \n\n',
-                     reply_markup=stack.create_start_reply())
+                     reply_markup=stack.create_start_reply(), parse_mode='Markdown')
     bot.set_state(message.from_user.id, states.Arbitrage.Start, message.chat.id)
 
 
 @bot.message_handler(func=lambda message: message.text == 'Начать \U00002705', state=states.Arbitrage.Start)
-def get_best(message: Message):
+def get_best(message: Message) -> NoReturn:
     """
     Message handler for starting the process. Retrieves and sends the best offer for arbitrage trading,
     including various details such as datetime, total number of crypto pairs on selected exchanges, best symbol,
@@ -62,12 +65,13 @@ def get_best(message: Message):
                      reply_markup=inline.get_exchanges_links(bid_link=arbitrage_data["bid"]["link"],
                                                              ask_link=arbitrage_data["ask"]["link"],
                                                              ask_id=arbitrage_data["ask"]["id"],
-                                                             bid_id=arbitrage_data["bid"]["id"]))
+                                                             bid_id=arbitrage_data["bid"]["id"],
+                                                             message=message))
     bot.delete_state(message.from_user.id, message.chat.id)
 
 
 @bot.message_handler(func=lambda message: message.text == 'Выход \U0000274E', state=states.Arbitrage.Start)
-def exit_arbitrage(message: Message):
+def exit_arbitrage(message: Message) -> NoReturn:
     """
     A handler for exiting the arbitrage process when the user sends the message 'Выход'.
 

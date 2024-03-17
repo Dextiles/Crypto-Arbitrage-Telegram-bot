@@ -97,7 +97,7 @@ class Exchanges:
 
 
 class BestOffer(Exchanges):
-    def __init__(self, message: Message):
+    def __init__(self, message: Message) -> NoReturn:
         """
         Initializes the class instance with the given message.
 
@@ -190,7 +190,7 @@ class BestOffer(Exchanges):
             self._best['spread'] = spread
             self._best['mount'] = min_v
 
-    def get_best_offer(self):
+    def get_best_offer(self) -> NoReturn:
         """
         Retrieves the best offer from a list of exchanges.
 

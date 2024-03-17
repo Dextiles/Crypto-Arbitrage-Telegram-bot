@@ -16,8 +16,8 @@ def bot_help(message: Message):
     Returns:
     - None
     """
-    Logger(message).log_activity("help")
     bd_controller.create(message)
+    Logger(message).log_activity("help")
     text = [f"/{command} - {desk}" for command, desk in DEFAULT_COMMANDS]
     bot.reply_to(message, "\n".join(text))
     bd_controller.update_last_request_time(message)

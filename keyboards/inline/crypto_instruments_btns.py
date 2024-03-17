@@ -1,20 +1,29 @@
 from telebot import types # noqa
+from utils.misc.logger import Logger
+from typing import Union
 
 
-def get_exchanges_links(bid_id: str, bid_link: str, ask_id: str, ask_link: str) -> types.InlineKeyboardMarkup:
+def get_exchanges_links(bid_id: str, bid_link: str, ask_id: str, ask_link: str, message: types.Message) \
+        -> Union[types.InlineKeyboardMarkup, types.ReplyKeyboardRemove]:
     """
-    Generate a markup with inline keyboard buttons for buying and selling on different exchanges.
+    Generates the function comment for the given function.
 
-    Parameters:
-    bid_id (str): The ID of the exchange for buying.
-    bid_link (str): The URL link for buying on the specified exchange.
-    ask_id (str): The ID of the exchange for selling.
-    ask_link (str): The URL link for selling on the specified exchange.
+    Args:
+        bid_id (str): The ID of the bid.
+        bid_link (str): The link for buying on the bid exchange.
+        ask_id (str): The ID of the ask.
+        ask_link (str): The link for selling on the ask exchange.
+        message (types.Message): The message object.
 
     Returns:
-    types.InlineKeyboardMarkup: A markup with inline keyboard buttons for buying and selling on different exchanges.
+        Union[types.InlineKeyboardMarkup, types.ReplyKeyboardRemove]: The generated inline keyboard markup or a reply keyboard remove object.
     """
     markup = types.InlineKeyboardMarkup()
-    markup.add(types.InlineKeyboardButton(text=f'\U00002795 Купить на {bid_id}', url=bid_link))
-    markup.add(types.InlineKeyboardButton(text=f'\U00002796 Продать на {ask_id}', url=ask_link))
-    return markup
+    try:
+        markup.add(types.InlineKeyboardButton(text=f'\U00002795 Купить на {bid_id}', url=bid_link))
+        markup.add(types.InlineKeyboardButton(text=f'\U00002796 Продать на {ask_id}', url=ask_link))
+    except Exception as ex:
+        Logger(message).log_exception(error=ex, func_name='get_exchanges_links', handler_name='/arbitrage')
+        return types.ReplyKeyboardRemove()
+    else:
+        return markup

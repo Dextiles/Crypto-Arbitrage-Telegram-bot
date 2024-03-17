@@ -48,3 +48,12 @@ class GetDefaultValues:
         """
         return self.__default_data['max_bad_list_size']
 
+    @property
+    def min_exchanges(self) -> int:
+        """
+        A property method that returns the min_exchanges from the default_data dictionary.
+        Returns:
+            int: The min_exchanges min value.
+        """
+        return int(self.__default_data['min_exchanges'])
+
