@@ -10,8 +10,8 @@ def bot_echo(message: Message):
     A function that echoes the message without any state or filter.
     Takes a Message object as input.
     """
-    Logger(message).log_activity("echo")
     bd_controller.create(message)
+    Logger(message).log_activity("echo")
     bot.reply_to(
         message, "Команда не распознана. Пожалуйста, введите /help для получения списка команд.",
     )

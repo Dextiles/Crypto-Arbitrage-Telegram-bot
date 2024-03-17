@@ -2,7 +2,6 @@ from telebot.types import Message, ReplyKeyboardRemove  # noqa
 from loader import bot
 from datetime import datetime
 from config_data.configuration import DATE_FORMAT_FULL, DATE_FORMAT_IN
-import json
 from database import userdata_controller as bd_controller
 from database import userdata_view as bd_view
 from keyboards.reply import config_replies as reply
@@ -11,10 +10,12 @@ from database.default_values_config.default_getter import GetDefaultValues
 from fastnumbers import isfloat
 from utils.misc.crypto_instruments.get_actual_symbols import get_actual_symbols
 from utils.misc.logger import Logger
+from typing import NoReturn
+import json
 
 
 @bot.message_handler(commands=["config"])
-def bot_info(message: Message):
+def bot_info(message: Message) -> NoReturn:
     """
     Handles the 'config' command message, retrieves user information, and sends a message with user details,
     working exchanges list, blacklisted currencies, default profit, and last request time. Updates the bot state
@@ -26,8 +27,8 @@ def bot_info(message: Message):
     Returns:
         None
     """
-    Logger(message).log_activity('config')
     bd_controller.create(message)
+    Logger(message).log_activity('config')
     current_user = bd_controller.get(message)
     bad_list_exchanges = bd_view.ConfigView(message).show_currency_in_black_list()
     bot.send_message(message.chat.id,
@@ -44,7 +45,7 @@ def bot_info(message: Message):
 
 
 @bot.message_handler(func=lambda message: message.text == 'Изменить настройки', state=UserSettings.Start)
-def start_config(message: Message):
+def start_config(message: Message) -> NoReturn:
     """
     A function that handles the start of the configuration process for the user settings.
 
@@ -78,7 +79,7 @@ def exit_config(message: Message):
 
 
 @bot.message_handler(func=lambda message: message.text == 'Криптовалюты', state=UserSettings.Choose_what_to_change)
-def choose_what_to_change(message: Message):
+def choose_what_to_change(message: Message) -> NoReturn:
     """
     A handler for choosing what to change in the user settings, based on the message text.
     Takes a message of type Message as input.
@@ -94,7 +95,7 @@ def choose_what_to_change(message: Message):
 
 @bot.message_handler(func=lambda message: message.text not in ['Выход', 'Очистить черный список'],
                      state=UserSettings.CryptoCurrency)
-def cryptocurrency_configuration(message: Message):
+def cryptocurrency_configuration(message: Message) -> NoReturn:
     """
     A function to handle cryptocurrency configuration based on user input.
     Updates the last request time, processes user input to uppercase,
@@ -137,7 +138,7 @@ def cryptocurrency_configuration(message: Message):
 
 
 @bot.message_handler(func=lambda message: message.text == 'Выход', state=UserSettings.CryptoCurrency)
-def exit_config(message: Message):
+def exit_config(message: Message) -> NoReturn:
     """
     Handles the 'Выход' message when in the UserSettings.CryptoCurrency state.
 
@@ -154,7 +155,7 @@ def exit_config(message: Message):
 
 
 @bot.message_handler(func=lambda message: message.text == 'Очистить черный список', state=UserSettings.CryptoCurrency)
-def delete_all_bad_list(message: Message):
+def delete_all_bad_list(message: Message) -> NoReturn:
     """
     Handles the message for deleting all items from the bad list in the CryptoCurrency state.
 
@@ -173,7 +174,7 @@ def delete_all_bad_list(message: Message):
 
 
 @bot.message_handler(func=lambda message: message.text == 'Криптобиржи', state=UserSettings.Choose_what_to_change)
-def set_exchanges(message: Message):
+def set_exchanges(message: Message) -> NoReturn:
     """
     Handles messages with text 'Криптобиржи' while in the state UserSettings.Choose_what_to_change.
     Updates the last request time in the database, sends a message to the chat to select a cryptocurrency exchange, and sets the state to UserSettings.Exchange.
@@ -192,7 +193,7 @@ def set_exchanges(message: Message):
 
 @bot.message_handler(func=lambda message: message.text in GetDefaultValues().exchanges,
                      state=UserSettings.Exchange)
-def set_exchanges(message: Message):
+def set_exchanges(message: Message) -> NoReturn:
     """
     A handler function for setting exchanges in the user settings.
     It updates the last request time, modifies the user's list of exchanges based on the message text,
@@ -203,12 +204,15 @@ def set_exchanges(message: Message):
     """
     bd_controller.update_last_request_time(message)
     user_exchanges = json.loads(bd_controller.get(message).work_exchanges)
-    if message.text in user_exchanges:
+    if message.text in user_exchanges and not len(user_exchanges) <= GetDefaultValues().min_exchanges:
         user_exchanges.remove(message.text)
         bd_controller.update(message, work_exchanges=json.dumps(user_exchanges))
         bot.send_message(message.chat.id, f'Криптобиржа {message.text} исключена из арбитража!\n'
                                           f'{bd_view.ConfigView(message).show_working_exchanges_list()}',
                          reply_markup=reply.get_exchanges_buttons())
+    elif message.text in user_exchanges and len(user_exchanges) <= GetDefaultValues().min_exchanges:
+        bot.send_message(message.chat.id, f'Минимум для проведения '
+                                          f'арбитража - {GetDefaultValues().min_exchanges} криптобиржы!')
     else:
         user_exchanges.append(message.text)
         bd_controller.update(message, work_exchanges=json.dumps(user_exchanges))
@@ -218,7 +222,7 @@ def set_exchanges(message: Message):
 
 
 @bot.message_handler(func=lambda message: message.text == 'Выход', state=UserSettings.Exchange)
-def exit_config(message: Message):
+def exit_config(message: Message) -> NoReturn:
     """
     Handles the 'Выход' message in the UserSettings.Exchange state.
 
@@ -235,7 +239,7 @@ def exit_config(message: Message):
 
 
 @bot.message_handler(func=lambda message: message.text == 'Профит', state=UserSettings.Choose_what_to_change)
-def choose_profit(message: Message):
+def choose_profit(message: Message) -> NoReturn:
     """
     Handles the message with text 'Профит' when the user is in the state of choosing what to change.
     Updates the last request time in the database controller.
@@ -250,7 +254,7 @@ def choose_profit(message: Message):
 
 
 @bot.message_handler(func=lambda message: isfloat(message.text) or message.text.isdigit(), state=UserSettings.Profit)
-def set_profit(message: Message):
+def set_profit(message: Message) -> NoReturn:
     """
     A message handler that sets the profit in the UserSettings for a given message.
 
@@ -268,7 +272,7 @@ def set_profit(message: Message):
 
 
 @bot.message_handler(func=lambda message: not isfloat(message.text) or not message.text.isdigit(), state=UserSettings.Profit)
-def error_profit(message: Message):
+def error_profit(message: Message) -> NoReturn:
     """
     A message handler for handling non-digit messages in the Profit state.
     It updates the last request time, then sends a message to the chat with a warning about incorrect input, and provides
@@ -279,7 +283,7 @@ def error_profit(message: Message):
 
 
 @bot.message_handler(func=lambda message: message.text == 'Выход', state=UserSettings.Profit)
-def exit_config(message: Message):
+def exit_config(message: Message) -> NoReturn:
     """
     A decorator that handles messages with the text 'Выход' while in the 'Profit' state of the UserSettings.
     It updates the last request time in the database, sends a message to the chat indicating the user exited the settings,
@@ -292,7 +296,7 @@ def exit_config(message: Message):
 
 
 @bot.message_handler(func=lambda message: message.text == 'Сбросить все настройки', state=UserSettings.Choose_what_to_change)
-def set_to_default(message: Message):
+def set_to_default(message: Message) -> NoReturn:
     """
     A message handler that sets the default values in the UserSettings for a given message.
 

@@ -15,8 +15,8 @@ def bot_start(message: Message):
     Parameters:
     - message: Message - the message object triggering the command
     """
-    Logger(message).log_activity('start')
-    invoke_text = 'Это сервис по арбитражу криптовалют!'
+    invoke_text = ('Это сервис по арбитражу криптовалют!'
+                   '/help - просмотр списка команд и их описания')
     if bd_controller.create(message):
         bot.send_message(message.chat.id, invoke_text)
     else:
@@ -24,5 +24,7 @@ def bot_start(message: Message):
         bot.send_message(message.chat.id,
                          f'Рад вас снова видеть, {current_user.first_name}!\n'
                          f'Ваш последний запрос был {datetime.strftime(current_user.last_request, DATE_FORMAT_IN)}\n'
-                         f'С этого момента многое изменилось!')
+                         f'С этого момента многое изменилось!\n\n'
+                         f'Забыли команды: /help для просмотра списка команд и их описания')
         bd_controller.update_last_request_time(message)
+    Logger(message).log_activity('start')
