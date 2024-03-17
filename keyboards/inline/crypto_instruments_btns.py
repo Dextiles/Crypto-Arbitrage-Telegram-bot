@@ -16,7 +16,8 @@ def get_exchanges_links(bid_id: str, bid_link: str, ask_id: str, ask_link: str, 
         message (types.Message): The message object.
 
     Returns:
-        Union[types.InlineKeyboardMarkup, types.ReplyKeyboardRemove]: The generated inline keyboard markup or a reply keyboard remove object.
+        Union[types.InlineKeyboardMarkup, types.ReplyKeyboardRemove]: The generated inline keyboard markup or
+         a reply keyboard remove object.
     """
     markup = types.InlineKeyboardMarkup()
     try:
