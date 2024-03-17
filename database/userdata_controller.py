@@ -4,7 +4,6 @@ from peewee import *
 from datetime import datetime, timedelta
 from database.default_values_config.default_getter import GetDefaultValues
 import json
-from utils.misc.logger import Logger
 
 
 def create(message: Message) -> bool:
