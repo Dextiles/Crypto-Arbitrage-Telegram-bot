@@ -25,6 +25,7 @@ def bot_start(message: Message):
                          f'Рад вас снова видеть, {current_user.first_name}!\n'
                          f'Ваш последний запрос был {datetime.strftime(current_user.last_request, DATE_FORMAT_IN)}\n'
                          f'С этого момента многое изменилось!\n\n'
-                         f'Забыли команды: /help для просмотра списка команд и их описания')
+                         f'Забыли команды: /help для просмотра списка команд и их описания',
+                         reply_markup=types.ReplyKeyboardRemove())
         bd_controller.update_last_request_time(message)
     Logger(message).log_activity('start')
