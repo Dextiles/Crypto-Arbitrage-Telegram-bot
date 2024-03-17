@@ -43,7 +43,8 @@ class Logger:
 
     def log_activity(self, handler_name: str) -> NoReturn:
         """
-        Logs activity to a specific file in the 'logs/activity_logs' directory with the current timestamp, user information, and the provided handler name.
+        Logs activity to a specific file in the 'logs/activity_logs' directory with the current timestamp,
+        user information, and the provided handler name.
 
         Parameters:
             handler_name (str): The name of the handler triggering the activity log.
