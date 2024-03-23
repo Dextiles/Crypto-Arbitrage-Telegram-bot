@@ -44,7 +44,7 @@ def bot_info(message: Message) -> NoReturn:
     bd_controller.update_last_request_time(message)
 
 
-@bot.message_handler(func=lambda message: message.text == 'Изменить настройки', state=UserSettings.Start)
+@bot.message_handler(func=lambda message: True, state=UserSettings.Start)
 def start_config(message: Message) -> NoReturn:
     """
     A function that handles the start of the configuration process for the user settings.
@@ -140,18 +140,12 @@ def cryptocurrency_configuration(message: Message) -> NoReturn:
 @bot.message_handler(func=lambda message: message.text == 'Выход', state=UserSettings.CryptoCurrency)
 def exit_config(message: Message) -> NoReturn:
     """
-    Handles the 'Выход' message when in the UserSettings.CryptoCurrency state.
-
-    Args:
-    message (Message): The message object containing the user input.
-
-    Returns:
-    None
+    A message handler for exiting the configuration when in the CryptoCurrency state.
+    Updates the last request time, sends a message to the chat to choose what to change, and sets the state to Choose_what_to_change.
     """
     bd_controller.update_last_request_time(message)
-    bot.send_message(message.chat.id, 'Вы вышли из настройки\n/help - для просмотра доступных команд',
-                     reply_markup=ReplyKeyboardRemove())
-    bot.delete_state(message.from_user.id, message.chat.id)
+    bot.send_message(message.chat.id, 'Выберите, что вы хотите изменить', reply_markup=reply.get_options_to_config_button())
+    bot.set_state(message.chat.id, UserSettings.Choose_what_to_change, message.chat.id)
 
 
 @bot.message_handler(func=lambda message: message.text == 'Очистить черный список', state=UserSettings.CryptoCurrency)
@@ -169,8 +163,8 @@ def delete_all_bad_list(message: Message) -> NoReturn:
     bd_controller.update(message, bad_list_currency=json.dumps([]))
     bot.send_message(message.chat.id, f'Вы очистили черный список!\n'
                                       f'{bd_view.ConfigView(message).show_currency_in_black_list()}',
-                     reply_markup=ReplyKeyboardRemove())
-    bot.delete_state(message.from_user.id, message.chat.id)
+                     reply_markup=reply.get_options_to_config_button())
+    bot.set_state(message.chat.id, UserSettings.Choose_what_to_change, message.chat.id)
 
 
 @bot.message_handler(func=lambda message: message.text == 'Криптобиржи', state=UserSettings.Choose_what_to_change)
@@ -224,18 +218,13 @@ def set_exchanges(message: Message) -> NoReturn:
 @bot.message_handler(func=lambda message: message.text == 'Выход', state=UserSettings.Exchange)
 def exit_config(message: Message) -> NoReturn:
     """
-    Handles the 'Выход' message in the UserSettings.Exchange state.
-
-    Args:
-        message (Message): The message object
-
-    Returns:
-        None
+    A handler for the 'Выход' message in the UserSettings.Exchange state.
+    Updates last request time, sends a message to the chat to choose what to change, and sets the state to UserSettings.Choose_what_to_change.
     """
     bd_controller.update_last_request_time(message)
-    bot.send_message(message.chat.id, 'Вы вышли из настройки\n/help - для просмотра доступных команд',
-                     reply_markup=ReplyKeyboardRemove())
-    bot.delete_state(message.from_user.id, message.chat.id)
+    bot.send_message(message.chat.id, 'Выберите, что вы хотите изменить',
+                     reply_markup=reply.get_options_to_config_button())
+    bot.set_state(message.chat.id, UserSettings.Choose_what_to_change, message.chat.id)
 
 
 @bot.message_handler(func=lambda message: message.text == 'Профит', state=UserSettings.Choose_what_to_change)
@@ -249,8 +238,18 @@ def choose_profit(message: Message) -> NoReturn:
     bd_controller.update_last_request_time(message)
     bot.send_message(message.chat.id, 'Установите профит (учтите, чем больше профит вы установите, '
                                       'тем меньше шанс найти подходящую пару)',
-                     reply_markup=ReplyKeyboardRemove())
+                     reply_markup=reply.go_exit_button())
     bot.set_state(message.chat.id, UserSettings.Profit, message.chat.id)
+
+
+@bot.message_handler(func=lambda message: message.text == 'Выход', state=UserSettings.Profit)
+def exit_profit(message: Message) -> NoReturn:
+    """
+    A message handler for exiting the profit state, updating last request time, sending a message, and setting the user state.
+    """
+    bd_controller.update_last_request_time(message)
+    bot.send_message(message.chat.id, 'Выберите, что вы хотите изменить', reply_markup=reply.get_options_to_config_button())
+    bot.set_state(message.chat.id, UserSettings.Choose_what_to_change, message.chat.id)
 
 
 @bot.message_handler(func=lambda message: isfloat(message.text) or message.text.isdigit(), state=UserSettings.Profit)
@@ -285,14 +284,13 @@ def error_profit(message: Message) -> NoReturn:
 @bot.message_handler(func=lambda message: message.text == 'Выход', state=UserSettings.Profit)
 def exit_config(message: Message) -> NoReturn:
     """
-    A decorator that handles messages with the text 'Выход' while in the 'Profit' state of the UserSettings.
-    It updates the last request time in the database, sends a message to the chat indicating the user exited the settings,
-    removes the reply keyboard, and deletes the state of the user.
+    A function handler for exiting the configuration menu in the Profit state for the user settings.
+    It updates the last request time in the database, sends a message to the chat to choose what to change,
+    and sets the state to Choose_what_to_change for the user settings.
     """
     bd_controller.update_last_request_time(message)
-    bot.send_message(message.chat.id, 'Вы вышли из настройки\n/help - для просмотра доступных команд',
-                     reply_markup=ReplyKeyboardRemove())
-    bot.delete_state(message.from_user.id, message.chat.id)
+    bot.send_message(message.chat.id, 'Выберите, что вы хотите изменить', reply_markup=reply.get_options_to_config_button())
+    bot.set_state(message.chat.id, UserSettings.Choose_what_to_change, message.chat.id)
 
 
 @bot.message_handler(func=lambda message: message.text == 'Сбросить все настройки', state=UserSettings.Choose_what_to_change)
@@ -309,5 +307,6 @@ def set_to_default(message: Message) -> NoReturn:
     bd_controller.update_last_request_time(message)
     bd_controller.set_default(message)
     bot.send_message(message.chat.id,
-                     'Вы сбросили настройки! Установлены изначальные значения, для просмотра - напишите /config')
-    bot.delete_state(message.from_user.id, message.chat.id)
+                     'Вы сбросили настройки! Установлены изначальные значения, для просмотра - напишите /config',
+                     reply_markup=reply.get_options_to_config_button())
+

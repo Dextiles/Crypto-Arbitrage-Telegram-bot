@@ -34,7 +34,7 @@ def start_arbitrage(message: Message) -> NoReturn:
     bot.set_state(message.from_user.id, states.Arbitrage.Start, message.chat.id)
 
 
-@bot.message_handler(func=lambda message: message.text == 'Начать \U00002705', state=states.Arbitrage.Start)
+@bot.message_handler(func=lambda message: message.text.startswith('Начать'), state=states.Arbitrage.Start)
 def get_best(message: Message) -> NoReturn:
     """
     Message handler for starting the process. Retrieves and sends the best offer for arbitrage trading,
@@ -70,7 +70,7 @@ def get_best(message: Message) -> NoReturn:
     bot.delete_state(message.from_user.id, message.chat.id)
 
 
-@bot.message_handler(func=lambda message: message.text == 'Выход \U0000274E', state=states.Arbitrage.Start)
+@bot.message_handler(func=lambda message: message.text.startswith('Выход'), state=states.Arbitrage.Start)
 def exit_arbitrage(message: Message) -> NoReturn:
     """
     A handler for exiting the arbitrage process when the user sends the message 'Выход'.

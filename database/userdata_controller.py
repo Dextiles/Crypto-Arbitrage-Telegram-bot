@@ -45,7 +45,7 @@ def get(message: Message) -> userdata_model.Users:
     """
     try:
         return userdata_model.Users.get_or_none(user_id=message.from_user.id)
-    except Exception as ex:
+    except Exception:
         if create(message):
             return userdata_model.Users.get_or_none(user_id=message.from_user.id)
 
@@ -63,7 +63,7 @@ def update_common(**kwargs) -> bool:
     """
     try:
         userdata_model.WorkDirectory.update(**kwargs).execute()
-    except Exception as ex:
+    except Exception:
         return False
     else:
         return True
@@ -100,7 +100,7 @@ def delete(message: Message) -> bool:
     """
     try:
         userdata_model.Users.delete().where(userdata_model.Users.user_id == message.from_user.id).execute()
-    except Exception as ex:
+    except Exception:
         return False
     else:
         return True
@@ -118,7 +118,7 @@ def update_last_request_time(message: Message) -> bool:
     """
     try:
         update(message, last_request=datetime.now())
-    except Exception as ex:
+    except Exception:
         return False
     else:
         return True
@@ -155,7 +155,7 @@ def set_default(message: Message) -> bool:
                default_profit=GetDefaultValues().profit,
                bad_list_currency=json.dumps([]),
                work_exchanges=json.dumps(GetDefaultValues().exchanges))
-    except Exception as ex:
+    except Exception:
         return False
     else:
         return True
