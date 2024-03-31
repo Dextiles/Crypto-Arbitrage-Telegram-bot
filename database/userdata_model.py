@@ -25,7 +25,7 @@ class Users(Model):
         """
     user_id = IntegerField(primary_key=True)
     username = CharField()
-    first_name = CharField()
+    first_name = CharField(null=True)
     last_surname = CharField(null=True)
     reg_date = DateTimeField(default=datetime.now())
     bad_list_currency = CharField(default=json.dumps([]))

@@ -40,9 +40,9 @@ class Exchanges:
                                   reply_markup=ReplyKeyboardRemove())
         for exchange in [exchange for exchange in self.__exchanges_obj if exchange.has['fetchMarkets']]:
             try:
-                exchange.load_markets()
+                exchange.load_markets()  # этот фрагмент запускается в цикле
             except Exception as ex:
-                self._logger.log_exception(error=ex, func_name='__load_markets_all', handler_name='arbitrage')
+                self._logger.log_exception(error=ex, func_name='__load_markets_all', handler_name='/arbitrage')
         bot.delete_message(invoke.chat.id, invoke.message_id)
 
     def universe_fee_calculation(self, exchange, symbol: str, option: str, price: float) \

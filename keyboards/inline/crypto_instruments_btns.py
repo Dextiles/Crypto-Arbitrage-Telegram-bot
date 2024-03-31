@@ -21,6 +21,8 @@ def get_exchanges_links(bid_id: str, bid_link: str, ask_id: str, ask_link: str, 
     """
     markup = types.InlineKeyboardMarkup()
     try:
+        if bid_link == '' or ask_link == '':
+            raise ValueError('Links are empty')
         markup.add(types.InlineKeyboardButton(text=f'\U00002795 Купить на {bid_id}', url=bid_link))
         markup.add(types.InlineKeyboardButton(text=f'\U00002796 Продать на {ask_id}', url=ask_link))
     except Exception as ex:
