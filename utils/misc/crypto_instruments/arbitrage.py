@@ -220,16 +220,20 @@ class BestOffer(Exchanges):
             if len(value) < 2:
                 del self._working_directory[key]
 
+        thread_objects = list()
         start = bot.send_message(chat_id=self._chat_id, text=f'\U0000231B Обрабатываем пары..')
         for i, (symbol, exchanges) in enumerate(self._working_directory.items()):
-            if symbol.split('/USDT')[0] not in super().bad_list_values:
-                Thread(target=self._counter, args=(symbol, exchanges)).start()  # запуск вычисления
+            if symbol.split('/USDT')[0] not in super().bad_list_values:  # + сюда условие - торгуемые криптовалюты
+                thread = Thread(target=self._counter, args=(symbol, exchanges)) # запуск вычисления
+                thread_objects.append(thread)
+                thread.start()
                 if i % 10 == 0:
-                    time.sleep(0.5)
+                    time.sleep(0.1)
                     bot.edit_message_text(message_id=start.message_id,
                                           chat_id=self._chat_id,
                                           text=f'\U0000231B Обработано {i} криптопар')
             self._best['total'] = i
-        time.sleep(3)
+        for thread in thread_objects:
+            thread.join()
         bot.delete_message(message_id=start.message_id, chat_id=self._chat_id)
         return self._best
