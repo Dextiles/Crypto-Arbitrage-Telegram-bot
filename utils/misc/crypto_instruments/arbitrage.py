@@ -38,9 +38,17 @@ class Exchanges:
         invoke = bot.send_message(message.chat.id, '\U0001F554 Подождите, идет загрузка бирж...\n'
                                                    'Пока можете перекусить.. \U0001F355',
                                   reply_markup=ReplyKeyboardRemove())
+        thread_objects = list()
         for exchange in [exchange for exchange in self.__exchanges_obj if exchange.has['fetchMarkets']]:
             try:
-                exchange.load_markets()  # этот фрагмент запускается в цикле
+                thread_obj = Thread(target=exchange.load_markets)
+                thread_objects.append(thread_obj)
+                thread_obj.start()
+            except Exception as ex:
+                self._logger.log_exception(error=ex, func_name='__load_markets_all', handler_name='/arbitrage')
+        for thread_obj in thread_objects:
+            try:
+                thread_obj.join()
             except Exception as ex:
                 self._logger.log_exception(error=ex, func_name='__load_markets_all', handler_name='/arbitrage')
         bot.delete_message(invoke.chat.id, invoke.message_id)
