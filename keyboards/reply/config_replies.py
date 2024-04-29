@@ -1,4 +1,5 @@
 from telebot import types # noqa
+from database.default_values_config.default_getter import GetDefaultValues
 
 
 def get_start_config_reply() -> types.ReplyKeyboardMarkup:
@@ -43,9 +44,10 @@ def get_exchanges_buttons() -> types.ReplyKeyboardMarkup:
     """
     A function to initialize a reply keyboard markup with two buttons for starting and exiting.
     """
+    exchanges_names = GetDefaultValues().exchanges
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=1)
     markup.row(types.KeyboardButton('binance'), types.KeyboardButton("bybit"), types.KeyboardButton("okx"))
     markup.row(types.KeyboardButton("kucoin"), types.KeyboardButton("upbit"), types.KeyboardButton("gateio"))
-    markup.row(types.KeyboardButton("gemini"), types.KeyboardButton("coinbase"), types.KeyboardButton("cryptocom"))
+    markup.row(types.KeyboardButton("gemini"), types.KeyboardButton("zonda"), types.KeyboardButton("cryptocom"))
     markup.row(types.KeyboardButton('Выход'))
     return markup

@@ -31,7 +31,9 @@ class Exchanges:
 
     def __load_markets_all(self, message: Message) -> NoReturn:
         """
-        Load all markets for each exchange.
+        Loads all markets for all exchanges.
+        Args:
+            message (Message): The message object containing the chat ID.
         Returns:
             NoReturn: This function does not return anything.
         """
@@ -200,10 +202,28 @@ class BestOffer(Exchanges):
 
     def get_best_offer(self) -> NoReturn:
         """
-        Retrieves the best offer from a list of exchanges.
+        Retrieves the best offer for each cryptocurrency pair traded on supported exchanges.
 
-        Returns:
-            dict: A dictionary representing the best offer.
+        This function iterates through each exchange object and filters the symbol
+        list to only include pairs that end with '/USDT'.
+        For each pair, it checks if it already exists in the working directory. If not, it adds
+        the exchange to the pair's list of exchanges.
+        If the pair already exists, it appends the exchange to the existing list.
+
+        If any exception occurs during the process, it logs the exception using the logger.
+
+        After iterating through all exchanges and pairs, the function removes any pairs that have less than 2 exchanges.
+
+        It then initializes a list of thread objects and sends a message to the chat indicating that pairs are being
+        processed.
+
+        For each pair in the working directory, it checks if the pair's cryptocurrency is not in the bad list values and
+        if the symbol's name is not in the bad list values.
+        If both conditions are met, it creates a new thread and starts it to perform the counter calculation.
+        Every 10 pairs, it sleeps for 0.1 seconds and updates the message with the number of processed
+        cryptopairs.
+
+        After all threads have completed, it deletes the initial message.
         """
         for exchange in self._exchanges_object:
             try:
@@ -224,7 +244,7 @@ class BestOffer(Exchanges):
         start = bot.send_message(chat_id=self._chat_id, text=f'\U0000231B Обрабатываем пары..')
         for i, (symbol, exchanges) in enumerate(self._working_directory.items()):
             if symbol.split('/USDT')[0] not in super().bad_list_values:  # + сюда условие - торгуемые криптовалюты
-                thread = Thread(target=self._counter, args=(symbol, exchanges)) # запуск вычисления
+                thread = Thread(target=self._counter, args=(symbol, exchanges))  # запуск вычисления
                 thread_objects.append(thread)
                 thread.start()
                 if i % 10 == 0:
