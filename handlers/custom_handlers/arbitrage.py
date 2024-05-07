@@ -44,33 +44,35 @@ def get_best(message: Message) -> NoReturn:
     """
     bd_controller.update_last_request_time(message)
     arbitrage_data = arbitrage.BestOffer(message).get_best_offer()
-    if arbitrage_data['symbol'] == 'None':
-        bot.send_message(message.chat.id, 'Не удалось выполнить запрос! Попробуйте изменить настройки /config',
+    if arbitrage_data['symbol'] == '':
+        bot.send_message(message.chat.id,
+                         'Не удалось получить пару, подходящую для арбитража! Попробуйте изменить настройки\n/config',
                          reply_markup=types.ReplyKeyboardRemove())
     else:
         bot.send_message(message.chat.id,
-                         f'Запрос актуален на \U0001F554 '
+                         f'\U0001F554 Запрос актуален на '
                          f'{datetime.strftime(datetime.now(), DATE_FORMAT_FULL)}\n\n'
                          f'\U0001F4CC Обработано {arbitrage_data["total"]} криптопар на избранных биржах '
                          f'(/config - просмотр ваших настроек)\n\n'
-                         f'\U00002757 Выгодная связка: {arbitrage_data["symbol"]} \U00002757\n'
-                         f'\U00002795 Купить: {arbitrage_data["ask"]["id"]}, цена '
+                         f'\U00002757 <b>Выгодная связка:</b> {arbitrage_data["symbol"]} \U00002757\n'
+                         f'\U00002795 <b>Купить:</b> {arbitrage_data["ask"]["id"]}\nцена '
                          f'{round(arbitrage_data["ask"]["value"], ROUND_VALUE)} USDT\n'
                          f'(Комиссия в {round(arbitrage_data["ask"]["fee"], ROUND_VALUE)})\n'
-                         f'\U00002796 Продать: {arbitrage_data["bid"]["id"]}, цена '
+                         f'\U00002796 <b>Продать:</b> {arbitrage_data["bid"]["id"]}\nцена '
                          f'{round(arbitrage_data["bid"]["value"], ROUND_VALUE)} USDT\n'
                          f'(Комиссия в {round(arbitrage_data["bid"]["fee"], ROUND_VALUE)})\n\n'
-                         f'Чистый спред:\n\U0001F4B2 {arbitrage_data["spread"]} USDT\n\n'
-                         f'Валюта доступная для операции: '
+                         f'<b>Чистый спред:</b> \n\U0001F4B2 {arbitrage_data["spread"]} USDT\n\n'
+                         f'<b>Валюта доступная для операции:</b> '
                          f'{round(arbitrage_data["mount"], ROUND_VALUE)}\n'
-                         f'Полный профит с {round(arbitrage_data["ask"]["value"] * arbitrage_data["mount"], 5)} '
+                         f'<b>Полный профит с</b> {round(arbitrage_data["ask"]["value"] * arbitrage_data["mount"], 5)} '
                          f'USDT:\n'
                          f'\U0001F4B5 {round(arbitrage_data["mount"] * arbitrage_data["spread"], ROUND_VALUE)} USDT ',
                          reply_markup=inline.get_exchanges_links(bid_link=arbitrage_data["bid"]["link"],
                                                                  ask_link=arbitrage_data["ask"]["link"],
                                                                  ask_id=arbitrage_data["ask"]["id"],
                                                                  bid_id=arbitrage_data["bid"]["id"],
-                                                                 message=message))
+                                                                 message=message),
+                         parse_mode='HTML')
     bot.delete_state(message.from_user.id, message.chat.id)
 
 

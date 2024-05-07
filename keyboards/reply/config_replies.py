@@ -44,7 +44,6 @@ def get_exchanges_buttons() -> types.ReplyKeyboardMarkup:
     """
     A function to initialize a reply keyboard markup with two buttons for starting and exiting.
     """
-    exchanges_names = GetDefaultValues().exchanges
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=1)
     markup.row(types.KeyboardButton('binance'), types.KeyboardButton("bybit"), types.KeyboardButton("okx"))
     markup.row(types.KeyboardButton("kucoin"), types.KeyboardButton("upbit"), types.KeyboardButton("gateio"))

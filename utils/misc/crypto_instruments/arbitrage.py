@@ -230,12 +230,8 @@ class BestOffer(Exchanges):
         tradable = get_tradable_currencies()
         for exchange in self._exchanges_object:
             try:
-                pairs = list(filter(lambda sym: sym.endswith('/USDT') and sym.split('/')[0] in tradable, exchange.symbols))
-                for pair in pairs:
-                    if pair not in self._working_directory.keys():
-                        self._working_directory[pair] = [exchange]
-                    else:
-                        self._working_directory[pair].append(exchange)
+                for pair in filter(lambda sym: sym.endswith('/USDT') and sym.split('/')[0] in tradable, exchange.symbols):
+                    self._working_directory.setdefault(pair, []).append(exchange)
             except Exception as ex:
                 self._logger.log_exception(error=ex, func_name='get_best_offer', handler_name='arbitrage')
 

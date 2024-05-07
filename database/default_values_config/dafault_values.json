@@ -1,6 +1,6 @@
 {
   "exchanges": ["binance", "bybit", "okx", "kucoin", "upbit", "gateio", "gemini", "zonda", "cryptocom"],
-  "profit": "0.1",
+  "profit": "0.01",
   "max_bad_list_size" : "40",
   "min_exchanges" : "3"
 }
