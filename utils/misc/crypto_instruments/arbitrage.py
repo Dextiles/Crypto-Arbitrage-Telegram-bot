@@ -8,6 +8,7 @@ from threading import Thread
 import json
 from database import userdata_controller as db_controller
 from utils.misc.logger import Logger
+from utils.misc.crypto_instruments.tradable_currency import get_tradable_currencies
 
 
 class Exchanges:
@@ -41,7 +42,7 @@ class Exchanges:
                                                    'Пока можете перекусить.. \U0001F355',
                                   reply_markup=ReplyKeyboardRemove())
         thread_objects = list()
-        for exchange in [exchange for exchange in self.__exchanges_obj if exchange.has['fetchMarkets']]:
+        for exchange in [exchange for exchange in self.__exchanges_obj]:
             try:
                 thread_obj = Thread(target=exchange.load_markets)
                 thread_objects.append(thread_obj)
@@ -130,6 +131,7 @@ class BestOffer(Exchanges):
                       'excnages': self._exchanges,
                       'total': 0}
         self._working_directory = dict()
+        self._tradable_symbols = get_tradable_currencies()
 
     def _counter(self, sym: str, exchanges: list) -> NoReturn:
         """
@@ -225,9 +227,10 @@ class BestOffer(Exchanges):
 
         After all threads have completed, it deletes the initial message.
         """
+        tradable = get_tradable_currencies()
         for exchange in self._exchanges_object:
             try:
-                pairs = list(filter(lambda sym: sym.endswith('/USDT'), exchange.symbols))
+                pairs = list(filter(lambda sym: sym.endswith('/USDT') and sym.split('/')[0] in tradable, exchange.symbols))
                 for pair in pairs:
                     if pair not in self._working_directory.keys():
                         self._working_directory[pair] = [exchange]
@@ -243,7 +246,7 @@ class BestOffer(Exchanges):
         thread_objects = list()
         start = bot.send_message(chat_id=self._chat_id, text=f'\U0000231B Обрабатываем пары..')
         for i, (symbol, exchanges) in enumerate(self._working_directory.items()):
-            if symbol.split('/USDT')[0] not in super().bad_list_values:  # + сюда условие - торгуемые криптовалюты
+            if symbol.split('/USDT')[0] not in super().bad_list_values:
                 thread = Thread(target=self._counter, args=(symbol, exchanges))  # запуск вычисления
                 thread_objects.append(thread)
                 thread.start()
